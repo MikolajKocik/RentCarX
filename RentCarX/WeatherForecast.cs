@@ -4,7 +4,7 @@ namespace RentCarX
     {
         public DateOnly Date { get; set; }
 
-        //siemanoooo
+        //siemanoooooo
 
         public int TemperatureC { get; set; }
 
