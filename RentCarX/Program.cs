@@ -1,27 +1,49 @@
-namespace RentCarX
+using Microsoft.AspNetCore.Builder;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
+using RentCarX.Infrastructure.Data;
+using RentCarX.Infrastructure.Extensions;
+using RentCarX.Presentation.Extensions;
+
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddInfrastructure(builder.Configuration);
+builder.AddPresentation();
+
+builder.Services.AddControllers();
+
+var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
 {
-    public class Program
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
     {
-        public static void Main(string[] args)
-        {
-            var builder = WebApplication.CreateBuilder(args);
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "RentCarX API V1");
+        c.RoutePrefix = "swagger"; 
+    });
+}
 
-            // Add services to the container.
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider
+        .GetRequiredService<RentCarX_DbContext>();
 
-            builder.Services.AddControllers();
+    var pendingMigrations = dbContext.Database.GetPendingMigrations();
 
-            var app = builder.Build();
-
-            // Configure the HTTP request pipeline.
-
-            app.UseHttpsRedirection();
-
-            app.UseAuthorization();
-
-
-            app.MapControllers();
-
-            app.Run();
-        }
+    if (pendingMigrations.Any())
+    {
+        dbContext.Database.Migrate();
     }
 }
+
+
+// Configure the HTTP request pipeline.
+
+app.UseHttpsRedirection();
+
+app.MapControllers();
+
+app.Run();
+

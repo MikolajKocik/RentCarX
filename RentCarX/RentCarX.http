@@ -1,6 +1,8 @@
-@RentCarX_HostAddress = http://localhost:5113
+@Host = https://localhost
+@Port = 7100
+@RentCarX_HostAddress = {{Host}}:{{Port}}
 
-GET {{RentCarX_HostAddress}}/weatherforecast/
+GET {{RentCarX_HostAddress}}
 Accept: application/json
 
 ###

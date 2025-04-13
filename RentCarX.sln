@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.11.35312.102
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RentCarX", "RentCarX\RentCarX.csproj", "{EE5E75E6-EBEF-4C0C-A829-DD5601A2BEA0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RentCarX.Presentation", "RentCarX\RentCarX.Presentation.csproj", "{EE5E75E6-EBEF-4C0C-A829-DD5601A2BEA0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RentCarX.Infrastructure", "RentCarX.Infrastructure\RentCarX.Infrastructure.csproj", "{90124E72-6018-4B8D-AC0C-846D8A658497}"
 EndProject
