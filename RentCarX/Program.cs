@@ -13,6 +13,12 @@ builder.AddPresentation();
 
 builder.Services.AddControllers();
 
+if (builder.Environment.IsDevelopment())
+{
+    // user secrets data
+    builder.Configuration.AddUserSecrets<Program>();
+}
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -23,6 +29,8 @@ if (app.Environment.IsDevelopment())
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "RentCarX API V1");
         c.RoutePrefix = "swagger"; 
     });
+
+    app.UseDeveloperExceptionPage(); // middleware
 }
 
 using (var scope = app.Services.CreateScope())

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using RentCarX.Infrastructure.Data;
+using RentCarX.Infrastructure.Repositories;
 
 namespace RentCarX.Infrastructure.Extensions
 {
@@ -22,6 +23,12 @@ namespace RentCarX.Infrastructure.Extensions
 
             services.AddIdentity<IdentityUser, IdentityRole>()
                 .AddEntityFrameworkStores<RentCarX_DbContext>();
+
+            services.AddScoped<ICarRepository, CarRepository>();
+            services.AddScoped<IReservationRepository, ReservationRepository>();
+
+            services.AddHttpContextAccessor();
+            services.AddScoped<ICurrentUserService, CurrentUserService>();
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace RentCarX.Domain.Entities
+﻿namespace RentCarX.Domain.Models
 {
     public class Reservation
     {
