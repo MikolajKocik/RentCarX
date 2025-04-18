@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using RentCarX.Application.Interfaces.JWT;
 using RentCarX.Domain.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -7,7 +8,7 @@ using System.Text;
 
 namespace RentCarX.Infrastructure.Services
 {
-    public class JwtTokenService
+    public class JwtTokenService : IJwtTokenService
     {
         private readonly IConfiguration _config;
 

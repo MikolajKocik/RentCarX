@@ -1,9 +1,7 @@
 ﻿using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using RentCarX.Domain.Interfaces.DbContext;
+using RentCarX.Domain.Interfaces.UserContext;
 
 namespace RentCarX.Application.CQRS.Commands.Reservation.CreateReservation
 {
@@ -39,7 +37,7 @@ namespace RentCarX.Application.CQRS.Commands.Reservation.CreateReservation
             {
                 Id = Guid.NewGuid(),
                 CarId = car.Id,
-                UserId = _userContext.UserId, // zakładam że UserId masz w serwisie kontekstowym
+                UserId = _userContext.UserId, 
                 StartDate = request.StartDate,
                 EndDate = request.EndDate,
                 TotalCost = totalCost

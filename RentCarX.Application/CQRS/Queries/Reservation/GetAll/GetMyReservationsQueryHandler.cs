@@ -1,10 +1,8 @@
 ﻿using MediatR;
+using Microsoft.EntityFrameworkCore;
 using RentCarX.Application.DTOs;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using RentCarX.Domain.Interfaces.DbContext;
+using RentCarX.Domain.Interfaces.UserContext;
 
 namespace RentCarX.Application.CQRS.Queries.Reservation.GetAll
 {

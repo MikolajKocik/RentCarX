@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using RentCarX.Domain.Interfaces.UserContext;
 using System.Security.Claims;
 
 namespace RentCarX.Application.Services.User

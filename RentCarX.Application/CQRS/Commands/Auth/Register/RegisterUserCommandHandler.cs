@@ -1,5 +1,6 @@
 ﻿using MediatR;
-using Microsoft.AspNet.Identity;
+using RentCarX.Application.Interfaces.JWT;
+using RentCarX.Application.Interfaces.PasswordHasher;
 using RentCarX.Domain.Interfaces.DbContext;
 using RentCarX.Domain.Models;
 namespace RentCarX.Application.CQRS.Commands.Auth.Register
@@ -7,12 +8,14 @@ namespace RentCarX.Application.CQRS.Commands.Auth.Register
     public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, string>
     {
         private readonly IRentCarX_DbContext _context;
-        private readonly JwtTokenService _jwtService;
+        private readonly IJwtTokenService _jwtService;
+        private readonly IPasswordHasher _passwordHasher;
 
-        public RegisterUserCommandHandler(IRentCarX_DbContext context, JwtTokenService jwtService)
+        public RegisterUserCommandHandler(IRentCarX_DbContext context, IJwtTokenService jwtService, IPasswordHasher passwordHasher)
         {
             _context = context;
             _jwtService = jwtService;
+            _passwordHasher = passwordHasher;
         }
 
         public async Task<string> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
@@ -21,7 +24,7 @@ namespace RentCarX.Application.CQRS.Commands.Auth.Register
             if (userExists)
                 throw new Exception("User already exists.");
 
-            PasswordHasher.CreatePasswordHash(request.Dto.Password, out var hash, out var salt);
+            _passwordHasher.CreatePasswordHash(request.Dto.Password, out var hash, out var salt);
 
             var user = new User
             {
@@ -37,5 +40,4 @@ namespace RentCarX.Application.CQRS.Commands.Auth.Register
             return _jwtService.GenerateToken(user);
         }
     }
-
 }

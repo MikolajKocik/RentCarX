@@ -1,9 +1,5 @@
-﻿using RentCarX.Application.DTOs.Auth;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using MediatR;
+using RentCarX.Application.DTOs.Auth;
 
 namespace RentCarX.Application.CQRS.Commands.Auth.Login
 {

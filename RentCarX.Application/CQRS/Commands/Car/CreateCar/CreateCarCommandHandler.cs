@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using RentCarX.Application.CQRS.Commands.Car.AddCar;
+using RentCarX.Domain.Interfaces.DbContext;
 
 namespace RentCarX.Application.CQRS.Commands.Car.CreateCar
 {

@@ -1,5 +1,7 @@
 ﻿using MediatR;
+using Microsoft.EntityFrameworkCore;
 using RentCarX.Application.DTOs;
+using RentCarX.Domain.Interfaces.DbContext;
 
 namespace RentCarX.Application.CQRS.Queries.Car.GetAll
 {
