@@ -1,17 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using MediatR;
+using RentCarX.Domain.Interfaces.DbContext;
+using RentCarX.Infrastructure.Services;
 
 namespace RentCarX.Application.CQRS.Commands.Auth.Login
 {
     public class LoginUserHandler : IRequestHandler<LoginUserCommand, string>
     {
-        private readonly RentCarX_DbContext _context;
+        private readonly IRentCarX_DbContext _context;
         private readonly JwtTokenService _jwtService;
 
-        public LoginUserHandler(RentCarX_DbContext context, JwtTokenService jwtService)
+        public LoginUserHandler(IRentCarX_DbContext context, JwtTokenService jwtService)
         {
             _context = context;
             _jwtService = jwtService;

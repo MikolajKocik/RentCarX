@@ -4,9 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RentCarX.Application.CQRS.Commands.Car.AddCar
+namespace RentCarX.Domain.Interfaces.UserContext
 {
-    class AddCarCommand
+    public interface IUserContextService
     {
+        Guid UserId { get; }
     }
 }

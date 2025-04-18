@@ -1,12 +1,15 @@
-﻿using Microsoft.AspNet.Identity;
+﻿using MediatR;
+using Microsoft.AspNet.Identity;
+using RentCarX.Domain.Interfaces.DbContext;
+using RentCarX.Domain.Models;
 namespace RentCarX.Application.CQRS.Commands.Auth.Register
 {
     public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, string>
     {
-        private readonly RentCarX_DbContext _context;
+        private readonly IRentCarX_DbContext _context;
         private readonly JwtTokenService _jwtService;
 
-        public RegisterUserCommandHandler(RentCarX_DbContext context, JwtTokenService jwtService)
+        public RegisterUserCommandHandler(IRentCarX_DbContext context, JwtTokenService jwtService)
         {
             _context = context;
             _jwtService = jwtService;
