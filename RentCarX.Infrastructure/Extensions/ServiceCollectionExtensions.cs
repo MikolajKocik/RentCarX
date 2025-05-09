@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using RentCarX.Application.Interfaces.JWT;
 using RentCarX.Application.Interfaces.PasswordHasher;
 using RentCarX.Application.Services.User;
 using RentCarX.Domain.Interfaces.Repositories;
@@ -44,6 +45,8 @@ namespace RentCarX.Infrastructure.Extensions
             services.AddScoped<IPasswordHasher, PasswordHasher>();
 
             services.AddScoped<IPaymentService, PaymentService>();
+
+            services.AddScoped<IJwtTokenService, JwtTokenService>();
         }
     }
 }

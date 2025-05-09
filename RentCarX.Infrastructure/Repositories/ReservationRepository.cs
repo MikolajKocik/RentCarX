@@ -13,8 +13,7 @@ public class ReservationRepository : IReservationRepository
     private readonly RentCarX_DbContext _context;
     private readonly ILogger<ReservationRepository> _logger;
 
-    public ReservationRepository(RentCarX_DbContext context, UserManager<IdentityUser> userManager,
-        ILogger<ReservationRepository> logger)
+    public ReservationRepository(RentCarX_DbContext context, ILogger<ReservationRepository> logger)
     {
         _context = context;
         _logger = logger;
