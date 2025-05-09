@@ -1,6 +1,6 @@
 ﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
-using RentCarX.Application.DTOs;
+using RentCarX.Application.DTOs.Car;
 using RentCarX.Domain.Interfaces.Repositories;
 
 namespace RentCarX.Application.CQRS.Queries.Car.GetDetails

@@ -1,5 +1,5 @@
 ﻿using MediatR;
-using RentCarX.Application.DTOs;
+using RentCarX.Application.DTOs.Reservation;
 using RentCarX.Domain.Interfaces.Repositories;
 using RentCarX.Domain.Interfaces.UserContext;
 

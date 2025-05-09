@@ -1,5 +1,4 @@
 ﻿using MediatR;
-using RentCarX.Domain.Interfaces.DbContext;
 using RentCarX.Domain.Interfaces.Repositories;
 
 namespace RentCarX.Application.CQRS.Commands.Car.DeleteCar

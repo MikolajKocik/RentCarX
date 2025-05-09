@@ -1,11 +1,10 @@
 ﻿using MediatR;
-using RentCarX.Application.DTOs;
+using RentCarX.Application.DTOs.Car;
 
 namespace RentCarX.Application.CQRS.Commands.Car.AddCar
 {
     public class CreateCarCommand : IRequest<Guid>
     {
-        public CarDto CarDto { get; set; } = default!;
+        public CreateCarDto CarData { get; set; } = default!; 
     }
-
 }

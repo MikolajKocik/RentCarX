@@ -31,7 +31,7 @@ namespace RentCarX.Application.CQRS.Commands.Reservation.CreateReservation
             var days = (request.EndDate - request.StartDate).Days;
             var totalCost = days * car.PricePerDay;
 
-            var reservation = new Reservation
+            var reservation = new RentCarX.Domain.Models.Reservation
             {
                 Id = Guid.NewGuid(),
                 CarId = car.Id,

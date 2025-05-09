@@ -5,11 +5,6 @@ using Microsoft.Extensions.Logging;
 using RentCarX.Domain.Models; 
 using RentCarX.Domain.Interfaces.Repositories;
 using RentCarX.Infrastructure.Data;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace RentCarX.Infrastructure.Repositories;
 
@@ -32,7 +27,7 @@ public class ReservationRepository : IReservationRepository
     }
 
     
-    public async Task<ICollection<Reservation>> GetUserReservations(Guid userId, CancellationToken cancellation)
+    public async Task<ICollection<Reservation>> GetUserReservations(string userId, CancellationToken cancellation)
         => await _context.Reservations
                .Where(r => r.UserId == userId)
                .Include(r => r.Car)

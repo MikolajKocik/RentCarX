@@ -16,15 +16,15 @@ namespace RentCarX.Application.CQRS.Commands.Car.CreateCar
 
         public async Task<Guid> Handle(CreateCarCommand request, CancellationToken cancellationToken)
         {
-            var car = new Car 
+            var car = new RentCarX.Domain.Models.Car 
             {
                 Id = Guid.NewGuid(),
-                Brand = request.CarDto.Brand,
-                Model = request.CarDto.Model,
-                FuelType = request.CarDto.FuelType,
-                PricePerDay = request.CarDto.PricePerDay,
-                Year = request.CarDto.Year,
-                IsAvailable = request.CarDto.IsAvailable 
+                Brand = request.CarData.Brand,
+                Model = request.CarData.Model,
+                FuelType = request.CarData.FuelType,
+                PricePerDay = request.CarData.PricePerDay,
+                Year = request.CarData.Year,
+                IsAvailable = request.CarData.IsAvailable 
             };
 
             await _carRepository.CreateAsync(car); 

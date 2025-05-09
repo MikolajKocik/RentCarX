@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using RentCarX.Domain.Entities;
 using RentCarX.Domain.Interfaces.Repositories;
+using RentCarX.Domain.Models;
 using RentCarX.Infrastructure.Data;
 
 namespace RentCarX.Infrastructure.Repositories;
@@ -13,24 +13,19 @@ public class CarRepository : ICarRepository
     {
         _context = context;
     }
-    public async Task CreateAsync(Car car)
+    public async Task CreateAsync(Car car, CancellationToken cancellation)
     {
-        await _context.Cars.AddAsync(car);
-        await _context.SaveChangesAsync();
+        await _context.Cars.AddAsync(car, cancellation);
+        await _context.SaveChangesAsync(cancellation);
     }
 
-    public async Task<Car?> GetCarByIdAsync(Guid id, CancellationToken cancellation)
-        => await _context.Cars
-        .Include(c => c.Images)
+    public async Task<Car?> GetCarByIdAsync(Guid id, CancellationToken cancellation) 
+        => await _context.Cars 
         .FirstOrDefaultAsync(c => c.Id == id, cancellation);
 
-    public async Task<ICollection<Car>> GetAllAsync(CancellationToken cancellation)
+    public async Task<ICollection<Car>> GetAllAsync(CancellationToken cancellation) 
         => await _context.Cars
-        .Include(c => c.Images)
         .ToListAsync(cancellation);
-
-    public async Task CommitAsync() => await _context.SaveChangesAsync();
-
 
     public async Task RemoveAsync(Guid id, CancellationToken cancellation)
     {
@@ -45,5 +40,37 @@ public class CarRepository : ICarRepository
     {
         _context.Cars.Update(car);
         await _context.SaveChangesAsync(cancellation);
+    }
+
+    public async Task<ICollection<Car>> GetFilteredCarsAsync(
+        string? brand,
+        string? model,
+        string? fuelType,
+        decimal? minPrice,
+        decimal? maxPrice,
+        bool? isAvailable,
+        CancellationToken cancellationToken)
+    {
+        var query = _context.Cars.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(brand))
+            query = query.Where(c => c.Brand.Contains(brand));
+
+        if (!string.IsNullOrWhiteSpace(model))
+            query = query.Where(c => c.Model.Contains(model));
+
+        if (!string.IsNullOrWhiteSpace(fuelType))
+            query = query.Where(c => c.FuelType == fuelType); 
+
+        if (minPrice.HasValue)
+            query = query.Where(c => c.PricePerDay >= minPrice.Value);
+
+        if (maxPrice.HasValue)
+            query = query.Where(c => c.PricePerDay <= maxPrice.Value);
+
+        if (isAvailable.HasValue)
+            query = query.Where(c => c.IsAvailable == isAvailable.Value);
+
+        return await query.ToListAsync(cancellationToken);
     }
 }

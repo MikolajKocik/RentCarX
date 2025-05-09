@@ -13,7 +13,6 @@
 	<ItemGroup>
 		<Folder Include="Extensions\" />
 		<Folder Include="Mappings\" />
-		<Folder Include="Validations\" />
 	</ItemGroup>
 
 	<ItemGroup>

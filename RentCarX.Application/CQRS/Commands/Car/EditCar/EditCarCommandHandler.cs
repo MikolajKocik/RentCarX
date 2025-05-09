@@ -19,12 +19,12 @@ namespace RentCarX.Application.CQRS.Commands.Car.EditCar
 
             if (car == null) return Unit.Value;
 
-            car.Brand = request.CarDto.Brand;
-            car.Model = request.CarDto.Model;
-            car.FuelType = request.CarDto.FuelType;
-            car.PricePerDay = request.CarDto.PricePerDay;
-            car.Year = request.CarDto.Year;
-            car.IsAvailable = request.CarDto.IsAvailable;
+            car.Brand = request.CarData.Brand;
+            car.Model = request.CarData.Model;
+            car.FuelType = request.CarData.FuelType;
+            car.PricePerDay = request.CarData.PricePerDay;
+            car.Year = request.CarData.Year;
+            car.IsAvailable = request.CarData.IsAvailable;
 
             await _carRepository.UpdateCarAsync(car, cancellationToken); 
 

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RentCarX.Application.DTOs
+namespace RentCarX.Application.DTOs.Car
 {
     public class CarDto
     {
