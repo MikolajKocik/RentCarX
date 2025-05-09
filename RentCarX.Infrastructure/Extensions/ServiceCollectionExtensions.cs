@@ -7,6 +7,7 @@ using RentCarX.Application.Services.User;
 using RentCarX.Domain.Interfaces.Repositories;
 using RentCarX.Domain.Interfaces.Services.Stripe;
 using RentCarX.Domain.Interfaces.UserContext;
+using RentCarX.Domain.Models;
 using RentCarX.Infrastructure.Data;
 using RentCarX.Infrastructure.Repositories;
 using RentCarX.Infrastructure.Services;
@@ -28,12 +29,9 @@ namespace RentCarX.Infrastructure.Extensions
                  .EnableSensitiveDataLogging());
 
             // add identity
-            services.AddIdentity<IdentityUser, IdentityRole>()
-                .AddEntityFrameworkStores<RentCarX_DbContext>()
-                .AddDefaultTokenProviders();
-
-            services.AddIdentityApiEndpoints<IdentityUser>()
-                .AddRoles<IdentityRole>();
+            services.AddIdentity<User, IdentityRole<Guid>>() 
+               .AddEntityFrameworkStores<RentCarX_DbContext>()
+               .AddDefaultTokenProviders();
 
 
             services.AddScoped<ICarRepository, CarRepository>();

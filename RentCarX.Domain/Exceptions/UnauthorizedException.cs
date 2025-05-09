@@ -1,5 +1,7 @@
 ﻿namespace RentCarX.Domain.Exceptions
 {
-    public class UnauthorizedException(string resourceType)
-   : Exception($"Unauthorized resource: {resourceType}");
+    public class UnauthorizedException : Exception
+    {
+        public UnauthorizedException(string message) : base(message) { }
+    }
 }

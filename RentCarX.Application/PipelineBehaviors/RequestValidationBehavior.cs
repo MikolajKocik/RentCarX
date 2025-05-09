@@ -5,7 +5,7 @@ using RentCarX.Domain.Exceptions;
 namespace RentCarX.Application.PipelineBehaviors
 {
     public class RequestValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
-        where TRequest : IRequest<TResponse>
+            where TRequest : IRequest<TResponse>
     {
         private readonly IEnumerable<IValidator<TRequest>> _validators;
 
@@ -26,7 +26,7 @@ namespace RentCarX.Application.PipelineBehaviors
             if (failures.Any())
             {
                 var errorMessages = string.Join(";", failures.Select(f => f.ErrorMessage));
-                throw new BadRequestException("Input data is invalid.", errorMessages);
+                throw new BadRequestException("Input data is invalid.", errorMessages, "Validation failed for the request.");
             }
 
             return await next();
