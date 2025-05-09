@@ -1,8 +1,0 @@
-@Host = https://localhost
-@Port = 7100
-@RentCarX_HostAddress = {{Host}}:{{Port}}
-
-GET {{RentCarX_HostAddress}}
-Accept: application/json
-
-###

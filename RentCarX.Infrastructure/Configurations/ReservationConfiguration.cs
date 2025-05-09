@@ -10,6 +10,8 @@ namespace RentCarX.Infrastructure.Configurations
         {
             // Relation 1-* between Car and Reservations
 
+            builder.HasKey(r => r.Id);
+
             builder.HasOne(r => r.Car)
             .WithMany(c => c.Reservations)
             .HasForeignKey(r => r.CarId)

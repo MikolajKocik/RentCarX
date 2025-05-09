@@ -8,7 +8,7 @@ using RentCarX.Presentation.Middleware;
 using MediatR;
 using FluentValidation; 
 using RentCarX.Application.PipelineBehaviors;
-using MediatR.Extensions.Microsoft.DependencyInjection;
+using FluentValidation.AspNetCore;
 
 namespace RentCarX.Presentation.Extensions
 {
@@ -82,7 +82,8 @@ namespace RentCarX.Presentation.Extensions
 
             // MediatR configuration
 
-            builder.Services.AddValidatorsFromAssembly(typeof(AssemblyMarker).Assembly); 
+            builder.Services.AddValidatorsFromAssembly(typeof(AssemblyMarker).Assembly)
+                .AddFluentValidationAutoValidation();
 
             builder.Services.AddMediatR(cfg => {
                 cfg.RegisterServicesFromAssembly(typeof(AssemblyMarker).Assembly);

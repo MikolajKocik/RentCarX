@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RentCarX.Application.CQRS.Commands.Auth.Login;
 using RentCarX.Application.CQRS.Commands.Auth.Register;
@@ -18,6 +19,11 @@ namespace RentCarX.Presentation.Controllers
         }
 
         [HttpPost("register")]
+        [AllowAnonymous] 
+        [ProducesResponseType(StatusCodes.Status200OK)] 
+        [ProducesResponseType(StatusCodes.Status400BadRequest)] 
+        [ProducesResponseType(StatusCodes.Status409Conflict)] 
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Register([FromBody] RegisterUserDto dto)
         {
             var token = await _mediator.Send(new RegisterUserCommand(dto));
@@ -25,12 +31,15 @@ namespace RentCarX.Presentation.Controllers
         }
 
         [HttpPost("login")]
+        [AllowAnonymous] 
+        [ProducesResponseType(StatusCodes.Status200OK)] 
+        [ProducesResponseType(StatusCodes.Status400BadRequest)] 
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)] 
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Login([FromBody] LoginDto dto)
         { 
             var token = await _mediator.Send(new LoginUserCommand(dto));
             return Ok(new { message = "User logged successfully", token });
         }
-
     }
-
 }

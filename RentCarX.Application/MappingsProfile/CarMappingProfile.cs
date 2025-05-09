@@ -4,9 +4,9 @@ using RentCarX.Domain.Models;
 
 namespace RentCarX.Application.MappingsProfile
 {
-    public class CarProfile : Profile
+    public class CarMappingProfile : Profile
     {
-        public CarProfile()
+        public CarMappingProfile()
         {
             CreateMap<Car, CarDto>().ReverseMap(); 
 

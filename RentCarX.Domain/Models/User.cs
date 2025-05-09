@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RentCarX.Domain.Models
+﻿namespace RentCarX.Domain.Models
 {
     public class User
     {
@@ -13,7 +7,10 @@ namespace RentCarX.Domain.Models
         public string Email { get; set; } = default!;
         public byte[] PasswordHash { get; set; } = default!;
         public byte[] PasswordSalt { get; set; } = default!;
-        public string Role { get; set; } = "User"; 
+        public string Role { get; set; } = "User";
+
+        public List<Reservation> Reservations { get; set; } = new List<Reservation>();
+
     }
 
 }

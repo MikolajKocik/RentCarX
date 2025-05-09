@@ -22,7 +22,9 @@ public class CarController : ControllerBase
 
     [AllowAnonymous]
     [HttpGet]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status200OK)] 
+    [ProducesResponseType(StatusCodes.Status400BadRequest)] 
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetFilteredCars(
         [FromQuery] string? brand = null,
         [FromQuery] string? model = null,
@@ -40,16 +42,23 @@ public class CarController : ControllerBase
 
     [Authorize(Roles = "Admin")]
     [HttpPost]
-    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status201Created)] 
+    [ProducesResponseType(StatusCodes.Status400BadRequest)] 
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)] 
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Create([FromBody] CreateCarCommand command, CancellationToken cancellationToken)
     {
         var id = await _mediator.Send(command, cancellationToken);
         return CreatedAtAction(nameof(GetCarById), new { id }, id);
     }
 
+    [AllowAnonymous]
     [HttpGet("{id:guid}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status200OK)] 
+    [ProducesResponseType(StatusCodes.Status404NotFound)] 
+    [ProducesResponseType(StatusCodes.Status400BadRequest)] 
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetCarById(Guid id, CancellationToken cancellationToken)
     {
         var car = await _mediator.Send(new CarDetailsQuery(id), cancellationToken);
@@ -60,9 +69,15 @@ public class CarController : ControllerBase
 
     [Authorize(Roles = "Admin")]
     [HttpPut("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)] 
+    [ProducesResponseType(StatusCodes.Status400BadRequest)] 
+    [ProducesResponseType(StatusCodes.Status404NotFound)] 
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)] 
+    [ProducesResponseType(StatusCodes.Status403Forbidden)] 
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Edit(Guid id, [FromBody] EditCarCommand command, CancellationToken cancellationToken)
     {
-        if (id != command.Id) return BadRequest();
+        if (id != command.Id) return BadRequest("Route ID and command ID do not match.");
 
         await _mediator.Send(command, cancellationToken);
         return NoContent();
@@ -70,6 +85,11 @@ public class CarController : ControllerBase
 
     [Authorize(Roles = "Admin")]
     [HttpDelete("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)] 
+    [ProducesResponseType(StatusCodes.Status404NotFound)] 
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)] 
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
         await _mediator.Send(new DeleteCarCommand { Id = id }, cancellationToken);

@@ -31,6 +31,12 @@ namespace RentCarX.Presentation.Middleware
                 context.Response.StatusCode = StatusCodes.Status409Conflict;
                 await context.Response.WriteAsync("Provided object already exist");
             }
+            catch (UnauthorizedAccessException ex)
+            {
+                logger.LogError(ex, ex.Message);
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                await context.Response.WriteAsync("Unauthorized");
+            }
             catch (Exception ex)
             {
                 logger.LogError(ex.InnerException?.Message ?? ex.Message);

@@ -1,28 +1,31 @@
 ﻿using MediatR;
 using RentCarX.Application.Interfaces.JWT;
 using RentCarX.Application.Interfaces.PasswordHasher;
-using RentCarX.Domain.Interfaces.DbContext;
+using RentCarX.Domain.Exceptions;
+using RentCarX.Domain.Interfaces.Repositories;
 using RentCarX.Domain.Models;
 namespace RentCarX.Application.CQRS.Commands.Auth.Register
 {
     public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, string>
     {
-        private readonly IRentCarX_DbContext _context;
+        private readonly IUserRepository _userRepository; 
         private readonly IJwtTokenService _jwtService;
         private readonly IPasswordHasher _passwordHasher;
 
-        public RegisterUserCommandHandler(IRentCarX_DbContext context, IJwtTokenService jwtService, IPasswordHasher passwordHasher)
+        public RegisterUserCommandHandler(IUserRepository userRepository, IJwtTokenService jwtService, IPasswordHasher passwordHasher)
         {
-            _context = context;
+            _userRepository = userRepository;
             _jwtService = jwtService;
             _passwordHasher = passwordHasher;
         }
 
         public async Task<string> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
         {
-            var userExists = _context.Users.Any(u => u.Email == request.Dto.Email);
+            var userExists = await _userRepository.EmailExistsAsync(request.Dto.Email, cancellationToken);
             if (userExists)
-                throw new Exception("User already exists.");
+            {
+                throw new ConflictException("User with this email already exists.", typeof(User).ToString()); 
+            }
 
             _passwordHasher.CreatePasswordHash(request.Dto.Password, out var hash, out var salt);
 
@@ -34,8 +37,7 @@ namespace RentCarX.Application.CQRS.Commands.Auth.Register
                 PasswordSalt = salt
             };
 
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync(cancellationToken);
+            await _userRepository.CreateUserAsync(user, cancellationToken);
 
             return _jwtService.GenerateToken(user);
         }

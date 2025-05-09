@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using RentCarX.Application.Extensions;
 using RentCarX.Domain.Models;
 using RentCarX.Infrastructure.Data;
 using RentCarX.Infrastructure.Extensions;
@@ -9,6 +10,7 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddApplication(builder.Configuration);
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.AddPresentation();
 

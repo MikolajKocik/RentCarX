@@ -1,27 +1,26 @@
 ﻿using MediatR;
-using Microsoft.EntityFrameworkCore;
 using RentCarX.Application.Interfaces.JWT;
 using RentCarX.Application.Interfaces.PasswordHasher;
-using RentCarX.Domain.Interfaces.DbContext;
+using RentCarX.Domain.Interfaces.Repositories;
 
 namespace RentCarX.Application.CQRS.Commands.Auth.Login
 {
-    public class LoginUserHandler : IRequestHandler<LoginUserCommand, string>
+    public class LoginUserCommandHandler : IRequestHandler<LoginUserCommand, string>
     {
-        private readonly IRentCarX_DbContext _context;
+        private readonly IUserRepository _userRepository; 
         private readonly IJwtTokenService _jwtService;
         private readonly IPasswordHasher _passwordHasher;
 
-        public LoginUserHandler(IRentCarX_DbContext context, IJwtTokenService jwtService, IPasswordHasher passwordHasher)
+        public LoginUserCommandHandler(IUserRepository userRepository, IJwtTokenService jwtService, IPasswordHasher passwordHasher)
         {
-            _context = context;
+            _userRepository = userRepository;
             _jwtService = jwtService;
             _passwordHasher = passwordHasher;
         }
 
         public async Task<string> Handle(LoginUserCommand request, CancellationToken cancellationToken)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Dto.Email, cancellationToken);
+            var user = await _userRepository.GetUserByEmailAsync(request.Dto.Email, cancellationToken);
 
             if (user is null || !_passwordHasher.VerifyPasswordHash(request.Dto.Password, user.PasswordHash, user.PasswordSalt))
             {

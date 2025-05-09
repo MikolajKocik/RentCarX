@@ -2,12 +2,14 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using RentCarX.Application.Interfaces.PasswordHasher;
 using RentCarX.Application.Services.User;
 using RentCarX.Domain.Interfaces.Repositories;
+using RentCarX.Domain.Interfaces.Services.Stripe;
 using RentCarX.Domain.Interfaces.UserContext;
-using RentCarX.Domain.Models;
 using RentCarX.Infrastructure.Data;
 using RentCarX.Infrastructure.Repositories;
+using RentCarX.Infrastructure.Services;
 
 namespace RentCarX.Infrastructure.Extensions
 {
@@ -36,9 +38,14 @@ namespace RentCarX.Infrastructure.Extensions
 
             services.AddScoped<ICarRepository, CarRepository>();
             services.AddScoped<IReservationRepository, ReservationRepository>();
+            services.AddScoped<IUserRepository, UserRepository>();
 
             services.AddHttpContextAccessor();
             services.AddScoped<IUserContextService, UserContextService>();
+
+            services.AddScoped<IPasswordHasher, PasswordHasher>();
+
+            services.AddScoped<IPaymentService, PaymentService>();
         }
     }
 }
