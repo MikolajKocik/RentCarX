@@ -6,11 +6,10 @@ using RentCarX.Domain.Models;
 
 namespace RentCarX.Infrastructure.Data
 {
-    public class RentCarX_DbContext : IdentityDbContext<IdentityUser>, IRentCarX_DbContext
+    public class RentCarX_DbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid> 
     {
         public DbSet<Car> Cars { get; set; }
         public DbSet<Reservation> Reservations { get; set; }
-        public DbSet<User> Users { get; set; }
 
         public RentCarX_DbContext(DbContextOptions<RentCarX_DbContext> options)
         : base(options) { }

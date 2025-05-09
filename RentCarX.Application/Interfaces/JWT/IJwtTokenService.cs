@@ -1,9 +1,7 @@
-﻿using RentCarX.Domain.Models;
-
-namespace RentCarX.Application.Interfaces.JWT
+﻿namespace RentCarX.Application.Interfaces.JWT
 {
     public interface IJwtTokenService
     {
-        string GenerateToken(User user);
+        Task<string> GenerateToken(User user); 
     }
 }

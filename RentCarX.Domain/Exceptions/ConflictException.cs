@@ -1,5 +1,17 @@
 ﻿namespace RentCarX.Domain.Exceptions
 {
-    public class ConflictException(string resourceType, string resourceIdentifier)
-       : Exception($"{resourceType} with provided object: {resourceIdentifier} already exists");
+    public class ConflictException : Exception
+    {
+        public string Details { get; }
+
+        public ConflictException(string message) : base(message)
+        {
+            Details = string.Empty;
+        }
+
+        public ConflictException(string message, string details) : base(message)
+        {
+            Details = details;
+        }
+    }
 }

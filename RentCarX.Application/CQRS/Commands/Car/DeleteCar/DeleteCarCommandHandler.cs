@@ -1,25 +1,31 @@
 ﻿using MediatR;
+using RentCarX.Application.CQRS.Commands.Car.DeleteCar;
+using RentCarX.Domain.Exceptions;
 using RentCarX.Domain.Interfaces.Repositories;
 
-namespace RentCarX.Application.CQRS.Commands.Car.DeleteCar
+public class DeleteCarCommandHandler : IRequestHandler<DeleteCarCommand, Unit>
 {
-    public class DeleteCarCommandHandler : IRequestHandler<DeleteCarCommand>
+    private readonly ICarRepository _carRepository;
+
+    public DeleteCarCommandHandler(ICarRepository carRepository)
     {
-        private readonly ICarRepository _carRepository;
+        _carRepository = carRepository;
+    }
 
-        public DeleteCarCommandHandler(ICarRepository carRepository) 
+    public async Task<Unit> Handle(DeleteCarCommand request, CancellationToken cancellationToken)
+    {
+        if (request == null)
         {
-            _carRepository = carRepository;
+            throw new ArgumentNullException(nameof(request));
         }
 
-        public async Task<Unit> Handle(DeleteCarCommand request, CancellationToken cancellationToken)
-        {
-            var entity = await _carRepository.GetCarByIdAsync(request.Id, cancellationToken);
-            if (entity == null) return Unit.Value;
+        var entity = await _carRepository.GetCarByIdAsync(request.Id, cancellationToken);
 
-            await _carRepository.RemoveAsync(request.Id, cancellationToken); 
+        if (entity == null) throw new NotFoundException("Car", request.Id.ToString());
 
-            return Unit.Value;
-        }
+
+        await _carRepository.RemoveAsync(request.Id, cancellationToken);
+
+        return Unit.Value;
     }
 }
