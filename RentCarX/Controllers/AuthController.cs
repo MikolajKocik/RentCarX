@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using MediatR;
+using Microsoft.AspNetCore.Mvc;
 using RentCarX.Application.CQRS.Commands.Auth.Login;
 using RentCarX.Application.CQRS.Commands.Auth.Register;
 using RentCarX.Application.DTOs.Auth;

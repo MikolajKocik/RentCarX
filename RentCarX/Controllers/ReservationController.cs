@@ -28,7 +28,7 @@ namespace RentCarX.Presentation.Controllers
         [HttpGet("my")]
         public async Task<IActionResult> GetMy(CancellationToken cancellationToken)
         {
-            var reservations = await _mediator.Send(new GetMyReservationsQuery(), cancellationToken);
+            var reservations = await _mediator.Send(new GetAllReservationsQuery(), cancellationToken);
             return Ok(reservations);
         }
 

@@ -6,18 +6,18 @@ using RentCarX.Domain.Interfaces.UserContext;
 
 namespace RentCarX.Application.CQRS.Queries.Reservation.GetAll
 {
-    public class GetMyReservationsQueryHandler : IRequestHandler<GetMyReservationsQuery, List<ReservationDto>>
+    public class GetAllReservationsQueryHandler : IRequestHandler<GetAllReservationsQuery, List<ReservationDto>>
     {
         private readonly IRentCarX_DbContext _context;
         private readonly IUserContextService _userContext;
 
-        public GetMyReservationsQueryHandler(IRentCarX_DbContext context, IUserContextService userContext)
+        public GetAllReservationsQueryHandler(IRentCarX_DbContext context, IUserContextService userContext)
         {
             _context = context;
             _userContext = userContext;
         }
 
-        public async Task<List<ReservationDto>> Handle(GetMyReservationsQuery request, CancellationToken cancellationToken)
+        public async Task<List<ReservationDto>> Handle(GetAllReservationsQuery request, CancellationToken cancellationToken)
         {
             return await _context.Reservations
                 .Where(r => r.UserId == _userContext.UserId)

@@ -1,6 +1,11 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RentCarX.Application.CQRS.Commands.Car.AddCar;
+using RentCarX.Application.CQRS.Commands.Car.DeleteCar;
+using RentCarX.Application.CQRS.Commands.Car.EditCar;
+using RentCarX.Application.CQRS.Queries.Car.GetDetails;
+using RentCarX.Application.CQRS.Queries.Car.GetFiltered;
 
 namespace RentCarX.Presentation.Controllers;
 
