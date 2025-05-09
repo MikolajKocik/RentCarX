@@ -1,36 +1,34 @@
 ﻿using MediatR;
-using RentCarX.Domain.Interfaces.DbContext;
+using RentCarX.Domain.Interfaces.Repositories;
+
 
 namespace RentCarX.Application.CQRS.Commands.Car.EditCar
 {
-    public class EditCarCommandHandler : IRequestHandler<EditCarCommand> 
+    public class EditCarCommandHandler : IRequestHandler<EditCarCommand, Unit>
     {
-        private readonly IRentCarX_DbContext _context;
+        private readonly ICarRepository _carRepository;
 
-        public EditCarCommandHandler(IRentCarX_DbContext context)
+        public EditCarCommandHandler(ICarRepository carRepository) 
         {
-            _context = context;
+            _carRepository = carRepository;
         }
 
-        public async Task<Unit> Handle(EditCarCommand request, CancellationToken cancellationToken) 
+        public async Task<Unit> Handle(EditCarCommand request, CancellationToken cancellationToken)
         {
-            var carEntity = await _context.Cars.FindAsync(new object[] { request.Id }, cancellationToken);
+            var car = await _carRepository.GetCarByIdAsync(request.Id, cancellationToken);
 
-            if (carEntity == null)
-            {
-                throw new KeyNotFoundException($"Car with ID {request.Id} not found.");
-            }
+            if (car == null) return Unit.Value;
 
-            if (request.Brand != null) carEntity.Brand = request.Brand;
-            if (request.Model != null) carEntity.Model = request.Model;
-            if (request.Year.HasValue) carEntity.Year = request.Year.Value;
-            if (request.FuelType != null) carEntity.FuelType = request.FuelType;
-            if (request.PricePerDay.HasValue) carEntity.PricePerDay = request.PricePerDay.Value;
-            if (request.IsAvailable.HasValue) carEntity.IsAvailable = request.IsAvailable.Value;
+            car.Brand = request.CarDto.Brand;
+            car.Model = request.CarDto.Model;
+            car.FuelType = request.CarDto.FuelType;
+            car.PricePerDay = request.CarDto.PricePerDay;
+            car.Year = request.CarDto.Year;
+            car.IsAvailable = request.CarDto.IsAvailable;
 
-            await _context.SaveChangesAsync(cancellationToken);
+            await _carRepository.UpdateCarAsync(car, cancellationToken); 
 
-            return Unit.Value; 
+            return Unit.Value;
         }
     }
 }

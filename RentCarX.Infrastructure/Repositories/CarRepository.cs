@@ -19,7 +19,7 @@ public class CarRepository : ICarRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task<Car?> GetCarByIdAsync(int id, CancellationToken cancellation)
+    public async Task<Car?> GetCarByIdAsync(Guid id, CancellationToken cancellation)
         => await _context.Cars
         .Include(c => c.Images)
         .FirstOrDefaultAsync(c => c.Id == id, cancellation);
@@ -32,7 +32,7 @@ public class CarRepository : ICarRepository
     public async Task CommitAsync() => await _context.SaveChangesAsync();
 
 
-    public async Task RemoveAsync(int id, CancellationToken cancellation)
+    public async Task RemoveAsync(Guid id, CancellationToken cancellation)
     {
         var carToRemove = await _context.Cars.FirstOrDefaultAsync(c => c.Id == id, cancellation);
 

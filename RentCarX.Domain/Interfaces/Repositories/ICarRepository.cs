@@ -8,12 +8,12 @@ namespace RentCarX.Domain.Interfaces.Repositories
 
         Task<ICollection<Car>> GetAllAsync(CancellationToken cancellation);
 
-        Task<Car?> GetCarByIdAsync(int id, CancellationToken cancellation);
+        Task<Car?> GetCarByIdAsync(Guid id, CancellationToken cancellation);
 
         Task CommitAsync();
         Task UpdateCarAsync(Car car, CancellationToken cancellation);
 
-        Task RemoveAsync(int id, CancellationToken cancellation);
+        Task RemoveAsync(Guid id, CancellationToken cancellation);
 
     }
 }

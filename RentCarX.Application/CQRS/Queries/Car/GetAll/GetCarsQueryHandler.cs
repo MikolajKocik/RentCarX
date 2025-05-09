@@ -2,21 +2,22 @@
 using Microsoft.EntityFrameworkCore;
 using RentCarX.Application.DTOs;
 using RentCarX.Domain.Interfaces.DbContext;
+using RentCarX.Domain.Interfaces.Repositories;
 
 namespace RentCarX.Application.CQRS.Queries.Car.GetAll
 {
     public class GetCarsQueryHandler : IRequestHandler<GetCarsQuery, List<CarDto>>
     {
-        private readonly IRentCarX_DbContext _context;
+        private readonly ICarRepository _carRepository; 
 
-        public GetCarsQueryHandler(IRentCarX_DbContext context)
+        public GetCarsQueryHandler(ICarRepository carRepository) 
         {
-            _context = context;
+            _carRepository = carRepository;
         }
 
         public async Task<List<CarDto>> Handle(GetCarsQuery request, CancellationToken cancellationToken)
         {
-            var query = _context.Cars.AsQueryable();
+            var query = (await _carRepository.GetAllAsync(cancellationToken)).AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(request.Brand))
             {
@@ -35,7 +36,9 @@ namespace RentCarX.Application.CQRS.Queries.Car.GetAll
                     Brand = c.Brand,
                     Model = c.Model,
                     PricePerDay = c.PricePerDay,
-                    IsAvailable = c.IsAvailable
+                    IsAvailable = c.IsAvailable,
+                    Year = c.Year, 
+                    FuelType = c.FuelType
                 })
                 .ToListAsync(cancellationToken);
 

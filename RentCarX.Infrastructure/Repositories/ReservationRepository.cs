@@ -2,8 +2,14 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
-using RentCarX.Domain.Entities;
+using RentCarX.Domain.Models; 
+using RentCarX.Domain.Interfaces.Repositories;
 using RentCarX.Infrastructure.Data;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace RentCarX.Infrastructure.Repositories;
 
@@ -25,7 +31,8 @@ public class ReservationRepository : IReservationRepository
         await _context.SaveChangesAsync(cancellation);
     }
 
-    public async Task<ICollection<Reservation>> GetUserReservations(string userId, CancellationToken cancellation)
+    
+    public async Task<ICollection<Reservation>> GetUserReservations(Guid userId, CancellationToken cancellation)
         => await _context.Reservations
                .Where(r => r.UserId == userId)
                .Include(r => r.Car)
@@ -34,12 +41,21 @@ public class ReservationRepository : IReservationRepository
     public async Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellation)
         => await _context.Database.BeginTransactionAsync(cancellation);
 
-    public async Task<Reservation?> GetReservationByIdAsync(int id, CancellationToken cancellation)
+    public async Task<Reservation?> GetReservationByIdAsync(Guid id, CancellationToken cancellation)
     {
-        _logger.LogInformation($"Executing SQL query for UserId: {id}");
+        _logger.LogInformation($"Executing SQL query for ReservationId: {id}"); 
 
         return await _context.Reservations
             .Include(r => r.Car)
             .FirstOrDefaultAsync(r => r.Id == id, cancellation);
+    }
+    
+    public async Task<bool> HasOverlappingReservationAsync(Guid carId, DateTime startDate, DateTime endDate, CancellationToken cancellationToken)
+    {
+        return await _context.Reservations.AnyAsync(r =>
+                r.CarId == carId &&
+                r.EndDate >= startDate && 
+                r.StartDate <= endDate, 
+                cancellationToken);
     }
 }

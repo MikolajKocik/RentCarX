@@ -1,31 +1,29 @@
 ﻿using MediatR;
-using Microsoft.EntityFrameworkCore;
-using RentCarX.Domain.Interfaces.DbContext;
+using RentCarX.Domain.Interfaces.Repositories;
 using RentCarX.Domain.Interfaces.UserContext;
 
 namespace RentCarX.Application.CQRS.Commands.Reservation.CreateReservation
 {
     public class CreateReservationCommandHandler : IRequestHandler<CreateReservationCommand, Guid>
     {
-        private readonly IRentCarX_DbContext _context;
+        private readonly IReservationRepository _reservationRepository; 
+        private readonly ICarRepository _carRepository; 
         private readonly IUserContextService _userContext;
 
-        public CreateReservationCommandHandler(IRentCarX_DbContext context, IUserContextService userContext)
+        public CreateReservationCommandHandler(IReservationRepository reservationRepository, ICarRepository carRepository, IUserContextService userContext) // Wstrzykujemy repozytoria
         {
-            _context = context;
+            _reservationRepository = reservationRepository;
+            _carRepository = carRepository;
             _userContext = userContext;
         }
 
         public async Task<Guid> Handle(CreateReservationCommand request, CancellationToken cancellationToken)
         {
-            var car = await _context.Cars.FindAsync(request.CarId);
+            var car = await _carRepository.GetCarByIdAsync(request.CarId, cancellationToken);
             if (car == null || !car.IsAvailable)
                 throw new Exception("Car not available");
 
-            var overlapping = await _context.Reservations.AnyAsync(r =>
-                r.CarId == request.CarId &&
-                r.EndDate >= request.StartDate &&
-                r.StartDate <= request.EndDate, cancellationToken);
+            bool overlapping = await _reservationRepository.HasOverlappingReservationAsync(request.CarId, request.StartDate, request.EndDate, cancellationToken);
 
             if (overlapping)
                 throw new Exception("Car already reserved for this period");
@@ -43,11 +41,9 @@ namespace RentCarX.Application.CQRS.Commands.Reservation.CreateReservation
                 TotalCost = totalCost
             };
 
-            _context.Reservations.Add(reservation);
-            await _context.SaveChangesAsync(cancellationToken);
+            await _reservationRepository.Create(reservation, cancellationToken); 
 
             return reservation.Id;
         }
     }
-
 }

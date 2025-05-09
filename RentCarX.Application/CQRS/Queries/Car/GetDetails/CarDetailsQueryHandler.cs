@@ -1,35 +1,37 @@
 ﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using RentCarX.Application.DTOs;
-using RentCarX.Domain.Interfaces.DbContext;
+using RentCarX.Domain.Interfaces.Repositories;
 
 namespace RentCarX.Application.CQRS.Queries.Car.GetDetails
 {
     public class CarDetailsQueryHandler : IRequestHandler<CarDetailsQuery, CarDto?>
     {
-        private readonly IRentCarX_DbContext _context;
+        private readonly ICarRepository _carRepository; 
 
-        public CarDetailsQueryHandler(IRentCarX_DbContext context)
+        public CarDetailsQueryHandler(ICarRepository carRepository) 
         {
-            _context = context;
+            _carRepository = carRepository;
         }
 
         public async Task<CarDto?> Handle(CarDetailsQuery request, CancellationToken cancellationToken)
         {
-            return await _context.Cars
-                .Where(c => c.Id == request.Id)
-                .Select(c => new CarDto
-                {
-                    Id = c.Id,
-                    Brand = c.Brand,
-                    Model = c.Model,
-                    Year = c.Year,
-                    FuelType = c.FuelType,
-                    PricePerDay = c.PricePerDay,
-                    IsAvailable = c.IsAvailable
-                })
-                .FirstOrDefaultAsync(cancellationToken);
+            var car = await _carRepository.GetCarByIdAsync(request.Id, cancellationToken);
+
+            if (car == null) return null;
+
+            var carDto = new CarDto
+            {
+                Id = car.Id,
+                Brand = car.Brand,
+                Model = car.Model,
+                Year = car.Year,
+                FuelType = car.FuelType,
+                PricePerDay = car.PricePerDay,
+                IsAvailable = car.IsAvailable
+            };
+
+            return carDto;
         }
     }
-
 }

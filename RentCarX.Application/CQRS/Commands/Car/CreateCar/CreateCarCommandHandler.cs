@@ -1,21 +1,22 @@
 ﻿using MediatR;
+using RentCarX.Domain.Interfaces.Repositories; 
+
 using RentCarX.Application.CQRS.Commands.Car.AddCar;
-using RentCarX.Domain.Interfaces.DbContext;
 
 namespace RentCarX.Application.CQRS.Commands.Car.CreateCar
 {
     public class CreateCarCommandHandler : IRequestHandler<CreateCarCommand, Guid>
     {
-        private readonly IRentCarX_DbContext _context;
+        private readonly ICarRepository _carRepository;
 
-        public CreateCarCommandHandler(IRentCarX_DbContext context)
+        public CreateCarCommandHandler(ICarRepository carRepository) 
         {
-            _context = context;
+            _carRepository = carRepository;
         }
 
         public async Task<Guid> Handle(CreateCarCommand request, CancellationToken cancellationToken)
         {
-            var car = new Car
+            var car = new Car 
             {
                 Id = Guid.NewGuid(),
                 Brand = request.CarDto.Brand,
@@ -23,14 +24,12 @@ namespace RentCarX.Application.CQRS.Commands.Car.CreateCar
                 FuelType = request.CarDto.FuelType,
                 PricePerDay = request.CarDto.PricePerDay,
                 Year = request.CarDto.Year,
-                IsAvailable = request.CarDto.IsAvailable
+                IsAvailable = request.CarDto.IsAvailable 
             };
 
-            _context.Cars.Add(car);
-            await _context.SaveChangesAsync(cancellationToken);
+            await _carRepository.CreateAsync(car); 
 
             return car.Id;
         }
     }
-
 }

@@ -1,24 +1,25 @@
 ﻿using MediatR;
 using RentCarX.Domain.Interfaces.DbContext;
+using RentCarX.Domain.Interfaces.Repositories;
 
 namespace RentCarX.Application.CQRS.Commands.Car.DeleteCar
 {
     public class DeleteCarCommandHandler : IRequestHandler<DeleteCarCommand>
     {
-        private readonly IRentCarX_DbContext _context;
+        private readonly ICarRepository _carRepository;
 
-        public DeleteCarCommandHandler(IRentCarX_DbContext context)
+        public DeleteCarCommandHandler(ICarRepository carRepository) 
         {
-            _context = context;
+            _carRepository = carRepository;
         }
 
         public async Task<Unit> Handle(DeleteCarCommand request, CancellationToken cancellationToken)
         {
-            var entity = await _context.Cars.FindAsync(new object[] { request.Id }, cancellationToken);
+            var entity = await _carRepository.GetCarByIdAsync(request.Id, cancellationToken);
             if (entity == null) return Unit.Value;
 
-            _context.Cars.Remove(entity);
-            await _context.SaveChangesAsync(cancellationToken);
+            await _carRepository.RemoveAsync(request.Id, cancellationToken); 
+
             return Unit.Value;
         }
     }
