@@ -1,0 +1,69 @@
+﻿@Host = https://localhost
+@Port = 7100
+
+@RentCarX.Presentation_HostAddress = {{Host}}:{{Port}}
+
+POST {{RentCarX.Presentation_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  //LoginDto
+}
+
+###
+
+POST {{RentCarX.Presentation_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  //RegisterUserDto
+}
+
+###
+
+GET {{RentCarX.Presentation_HostAddress}}/api/car
+
+###
+
+POST {{RentCarX.Presentation_HostAddress}}/api/car
+Content-Type: application/json
+
+{
+  //CreateCarCommand
+}
+
+###
+
+DELETE {{RentCarX.Presentation_HostAddress}}/api/car/{id:guid}
+
+###
+
+GET {{RentCarX.Presentation_HostAddress}}/api/car/{id:guid}
+
+###
+
+PUT {{RentCarX.Presentation_HostAddress}}/api/car/{id:guid}
+Content-Type: application/json
+
+{
+  //EditCarCommand
+}
+
+###
+
+POST {{RentCarX.Presentation_HostAddress}}/api/reservation
+Content-Type: application/json
+
+{
+  //CreateReservationCommand
+}
+
+###
+
+GET {{RentCarX.Presentation_HostAddress}}/api/reservation/all
+
+###
+
+GET {{RentCarX.Presentation_HostAddress}}/api/reservation/my
+
+###
