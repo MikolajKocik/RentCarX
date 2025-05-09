@@ -1,4 +1,5 @@
-﻿using MediatR;
+﻿using AutoMapper;
+using MediatR;
 using RentCarX.Application.DTOs.Reservation;
 using RentCarX.Domain.Interfaces.Repositories;
 using RentCarX.Domain.Interfaces.UserContext;
@@ -9,28 +10,23 @@ namespace RentCarX.Application.CQRS.Queries.Reservation.GetAll
     {
         private readonly IReservationRepository _reservationRepository; 
         private readonly IUserContextService _userContext;
+        private readonly IMapper _mapper;   
 
-        public GetAllReservationsQueryHandler(IReservationRepository reservationRepository, IUserContextService userContext) 
+        public GetAllReservationsQueryHandler(IReservationRepository reservationRepository, IUserContextService userContext,
+            IMapper mapper) 
         {
             _reservationRepository = reservationRepository;
             _userContext = userContext;
+            _mapper = mapper;
         }
 
         public async Task<List<ReservationDto>> Handle(GetAllReservationsQuery request, CancellationToken cancellationToken)
         {
-            var reservations = await _reservationRepository.GetUserReservations(_userContext.UserId.ToString(), cancellationToken);
+            var userId = _userContext.UserId;
 
-            return reservations
-               .Select(r => new ReservationDto
-               {
-                   Id = r.Id,
-                   CarId = r.CarId,
-                   CarName = $"{r.Car.Brand} {r.Car.Model}",
-                   StartDate = r.StartDate,
-                   EndDate = r.EndDate,
-                   TotalCost = r.TotalCost
-               })
-               .ToList(); 
+            var reservations = await _reservationRepository.GetUserReservations(userId, cancellationToken);
+
+            return _mapper.Map<List<ReservationDto>>(reservations.ToList());
         }
     }
 }

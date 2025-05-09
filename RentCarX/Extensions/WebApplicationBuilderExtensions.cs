@@ -1,4 +1,14 @@
-﻿using Microsoft.OpenApi.Models;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.OpenApi.Models;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using System.Reflection;
+using Serilog;
+using RentCarX.Presentation.Middleware;
+using MediatR;
+using FluentValidation; 
+using RentCarX.Application.PipelineBehaviors;
+using MediatR.Extensions.Microsoft.DependencyInjection;
 
 namespace RentCarX.Presentation.Extensions
 {
@@ -35,6 +45,8 @@ namespace RentCarX.Presentation.Extensions
                 });
             });
 
+            // JWT authentication configuration
+
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
                 {
@@ -52,8 +64,30 @@ namespace RentCarX.Presentation.Extensions
                     };
                 });
 
+            builder.Services.AddControllers();
+
+            // Middleware configuration
+            builder.Services.AddScoped<ErrorHandlingMiddleware>();
+
             builder.Services.AddAuthorization();
 
+            // AutoMapper configuration
+            builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
+
+            // Serilog configuration
+            builder.Host.UseSerilog((context, configuration) =>
+                configuration.ReadFrom.Configuration(context.Configuration)
+           );
+
+
+            // MediatR configuration
+
+            builder.Services.AddValidatorsFromAssembly(typeof(AssemblyMarker).Assembly); 
+
+            builder.Services.AddMediatR(cfg => {
+                cfg.RegisterServicesFromAssembly(typeof(AssemblyMarker).Assembly);
+                cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(RequestValidationBehavior<,>));
+            });
         }
     }
 }

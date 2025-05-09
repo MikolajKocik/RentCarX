@@ -1,4 +1,6 @@
-﻿using MediatR;
+﻿using AutoMapper;
+using MediatR;
+using RentCarX.Domain.Exceptions;
 using RentCarX.Domain.Interfaces.Repositories;
 
 
@@ -7,26 +9,26 @@ namespace RentCarX.Application.CQRS.Commands.Car.EditCar
     public class EditCarCommandHandler : IRequestHandler<EditCarCommand, Unit>
     {
         private readonly ICarRepository _carRepository;
+        private readonly IMapper _mapper;
 
-        public EditCarCommandHandler(ICarRepository carRepository) 
+        public EditCarCommandHandler(ICarRepository carRepository, IMapper mapper)
         {
             _carRepository = carRepository;
+            _mapper = mapper;
         }
 
         public async Task<Unit> Handle(EditCarCommand request, CancellationToken cancellationToken)
         {
             var car = await _carRepository.GetCarByIdAsync(request.Id, cancellationToken);
 
-            if (car == null) return Unit.Value;
+            if (car == null)
+            {
+                throw new NotFoundException("Car", request.Id.ToString()); 
+            }
 
-            car.Brand = request.CarData.Brand;
-            car.Model = request.CarData.Model;
-            car.FuelType = request.CarData.FuelType;
-            car.PricePerDay = request.CarData.PricePerDay;
-            car.Year = request.CarData.Year;
-            car.IsAvailable = request.CarData.IsAvailable;
+            _mapper.Map(request.CarData, car);
 
-            await _carRepository.UpdateCarAsync(car, cancellationToken); 
+            await _carRepository.UpdateCarAsync(car, cancellationToken);
 
             return Unit.Value;
         }

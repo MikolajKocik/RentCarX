@@ -27,9 +27,9 @@ public class ReservationRepository : IReservationRepository
     }
 
     
-    public async Task<ICollection<Reservation>> GetUserReservations(string userId, CancellationToken cancellation)
+    public async Task<ICollection<Reservation>> GetUserReservations(Guid userId, CancellationToken cancellation)
         => await _context.Reservations
-               .Where(r => r.UserId == userId)
+               .Where(r => r.UserId == userId) 
                .Include(r => r.Car)
                .ToListAsync(cancellation);
 

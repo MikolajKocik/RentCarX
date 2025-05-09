@@ -3,6 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using RentCarX.Application.Services.User;
+using RentCarX.Domain.Interfaces.Repositories;
+using RentCarX.Domain.Interfaces.UserContext;
+using RentCarX.Domain.Models;
 using RentCarX.Infrastructure.Data;
 using RentCarX.Infrastructure.Repositories;
 
@@ -18,12 +21,18 @@ namespace RentCarX.Infrastructure.Extensions
                 ?? throw new Exception("DB_CONNECTION_STRING environment variable not set");
 
             services.AddDbContext<RentCarX_DbContext>(options =>
-              options.UseSqlServer(connectionString));
+              options
+                 .UseSqlServer(connectionString)
+                 .EnableSensitiveDataLogging());
 
             // add identity
-
             services.AddIdentity<IdentityUser, IdentityRole>()
-                .AddEntityFrameworkStores<RentCarX_DbContext>();
+                .AddEntityFrameworkStores<RentCarX_DbContext>()
+                .AddDefaultTokenProviders();
+
+            services.AddIdentityApiEndpoints<IdentityUser>()
+                .AddRoles<IdentityRole>();
+
 
             services.AddScoped<ICarRepository, CarRepository>();
             services.AddScoped<IReservationRepository, ReservationRepository>();

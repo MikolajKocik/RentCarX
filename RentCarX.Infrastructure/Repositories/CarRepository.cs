@@ -42,14 +42,13 @@ public class CarRepository : ICarRepository
         await _context.SaveChangesAsync(cancellation);
     }
 
-    public async Task<ICollection<Car>> GetFilteredCarsAsync(
-        string? brand,
-        string? model,
-        string? fuelType,
-        decimal? minPrice,
-        decimal? maxPrice,
-        bool? isAvailable,
-        CancellationToken cancellationToken)
+    public IQueryable<Car> GetFilteredCarsQuery(
+         string? brand,
+         string? model,
+         string? fuelType,
+         decimal? minPrice,
+         decimal? maxPrice,
+         bool? isAvailable)
     {
         var query = _context.Cars.AsQueryable();
 
@@ -60,7 +59,7 @@ public class CarRepository : ICarRepository
             query = query.Where(c => c.Model.Contains(model));
 
         if (!string.IsNullOrWhiteSpace(fuelType))
-            query = query.Where(c => c.FuelType == fuelType); 
+            query = query.Where(c => c.FuelType == fuelType);
 
         if (minPrice.HasValue)
             query = query.Where(c => c.PricePerDay >= minPrice.Value);
@@ -71,6 +70,6 @@ public class CarRepository : ICarRepository
         if (isAvailable.HasValue)
             query = query.Where(c => c.IsAvailable == isAvailable.Value);
 
-        return await query.ToListAsync(cancellationToken);
+        return query; 
     }
 }

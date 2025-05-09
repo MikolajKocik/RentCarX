@@ -7,7 +7,7 @@ namespace RentCarX.Domain.Interfaces.Repositories
     {
         Task Create(Reservation reservation, CancellationToken cancellation);
 
-        Task<ICollection<Reservation>> GetUserReservations(string userId, CancellationToken cancellation);
+        Task<ICollection<Reservation>> GetUserReservations(Guid userId, CancellationToken cancellation);
 
         Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellation);
 

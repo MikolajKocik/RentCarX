@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using RentCarX.Domain.Entities;
+using RentCarX.Domain.Models;
 
 namespace RentCarX.Infrastructure.Configurations 
 {

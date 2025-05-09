@@ -1,17 +1,16 @@
-using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi.Models;
+using RentCarX.Domain.Models;
 using RentCarX.Infrastructure.Data;
 using RentCarX.Infrastructure.Extensions;
 using RentCarX.Presentation.Extensions;
+using RentCarX.Presentation.Middleware;
+using Serilog;
 
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.AddPresentation();
-
-builder.Services.AddControllers();
 
 if (builder.Environment.IsDevelopment())
 {
@@ -20,6 +19,8 @@ if (builder.Environment.IsDevelopment())
 }
 
 var app = builder.Build();
+
+app.UseMiddleware<ErrorHandlingMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
@@ -32,6 +33,8 @@ if (app.Environment.IsDevelopment())
 
     app.UseDeveloperExceptionPage(); // middleware
 }
+
+app.UseSerilogRequestLogging();
 
 using (var scope = app.Services.CreateScope())
 {
@@ -46,10 +49,16 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-
 // Configure the HTTP request pipeline.
 
 app.UseHttpsRedirection();
+
+app.MapGroup("api/identity")
+    .WithTags("Identity")
+    .MapIdentityApi<User>();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers();
 

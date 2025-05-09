@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using RentCarX.Domain.Interfaces.DbContext;
 using RentCarX.Domain.Models;
 
 namespace RentCarX.Infrastructure.Data

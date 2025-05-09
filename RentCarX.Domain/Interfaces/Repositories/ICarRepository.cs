@@ -14,13 +14,12 @@ namespace RentCarX.Domain.Interfaces.Repositories
 
         Task RemoveAsync(Guid id, CancellationToken cancellation);
 
-        Task<ICollection<Car>> GetFilteredCarsAsync(
-            string? brand,
-            string? model,
-            string? fuelType,
-            decimal? minPrice,
-            decimal? maxPrice,
-            bool? isAvailable,
-            CancellationToken cancellationToken);
+        IQueryable<Car> GetFilteredCarsQuery(
+         string? brand,
+         string? model,
+         string? fuelType,
+         decimal? minPrice,
+         decimal? maxPrice,
+         bool? isAvailable);
     }
 }

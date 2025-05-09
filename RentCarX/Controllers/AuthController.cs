@@ -26,9 +26,9 @@ namespace RentCarX.Presentation.Controllers
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto dto)
-        {
+        { 
             var token = await _mediator.Send(new LoginUserCommand(dto));
-            return Ok(new { token });
+            return Ok(new { message = "User logged successfully", token });
         }
 
     }

@@ -9,5 +9,7 @@
         public string FuelType { get; set; } = default!;
         public decimal PricePerDay { get; set; }
         public bool IsAvailable { get; set; } = true;
+
+        public List<Reservation> Reservations { get; set; } = new List<Reservation>();
     }
 }
