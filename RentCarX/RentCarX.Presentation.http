@@ -7,7 +7,10 @@ POST {{RentCarX.Presentation_HostAddress}}/api/auth/login
 Content-Type: application/json
 
 {
-  //LoginDto
+  "dto": {
+    "Email": "test@test.pl",
+    "Password": "testetst2"
+  }
 }
 
 ###

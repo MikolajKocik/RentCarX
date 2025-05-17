@@ -4,11 +4,11 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Reflection;
 using Serilog;
-using RentCarX.Presentation.Middleware;
 using MediatR;
 using FluentValidation; 
 using RentCarX.Application.PipelineBehaviors;
 using FluentValidation.AspNetCore;
+using RentCarX.Presentation.Middleware;
 
 namespace RentCarX.Presentation.Extensions
 {
@@ -67,7 +67,6 @@ namespace RentCarX.Presentation.Extensions
             builder.Services.AddControllers();
 
             // Middleware configuration
-            builder.Services.AddScoped<ErrorHandlingMiddleware>();
 
             builder.Services.AddAuthorization();
 
@@ -78,7 +77,6 @@ namespace RentCarX.Presentation.Extensions
             builder.Host.UseSerilog((context, configuration) =>
                 configuration.ReadFrom.Configuration(context.Configuration)
            );
-
 
             // MediatR configuration
 

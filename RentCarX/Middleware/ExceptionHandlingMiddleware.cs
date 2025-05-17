@@ -2,47 +2,111 @@
 
 namespace RentCarX.Presentation.Middleware
 {
-    public class ErrorHandlingMiddleware(ILogger<ErrorHandlingMiddleware> logger) : IMiddleware
+    public class ExceptionHandlingMiddleware
     {
-        public async Task InvokeAsync(HttpContext context, RequestDelegate next)
+        private readonly RequestDelegate _next;
+        private readonly ILogger<ExceptionHandlingMiddleware> _logger;
+
+        public ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
         {
+            _next = next;
+            _logger = logger;
+        }
+
+        public async Task InvokeAsync(HttpContext context)
+        {
+            _logger.LogInformation("ExceptionHandlingMiddleware activated");
+
             try
             {
-                await next.Invoke(context);
+                await _next(context);
             }
             catch (BadRequestException ex)
             {
-                logger.LogError(ex, ex.Message);
+                _logger.LogError(ex, "BadRequestException caught: {ErrorMessage}", ex.Message);
 
+                context.Response.ContentType = "application/json";
                 context.Response.StatusCode = StatusCodes.Status400BadRequest;
-                await context.Response.WriteAsync("Validation failed for object");
+
+                var errorResponse = new
+                {
+                    status = StatusCodes.Status400BadRequest,
+                    title = "Bad Request",
+                    message = "Validation failed for the request."
+                };
+                await context.Response.WriteAsJsonAsync(errorResponse);
             }
             catch (NotFoundException ex)
             {
-                logger.LogError(ex, ex.Message);
+                _logger.LogError(ex, "NotFoundException caught: {ErrorMessage}", ex.Message);
 
+                context.Response.ContentType = "application/json";
                 context.Response.StatusCode = StatusCodes.Status404NotFound;
-                await context.Response.WriteAsync("Provided object doesnt exist");
+                var errorResponse = new
+                {
+                    status = StatusCodes.Status404NotFound,
+                    title = "Not Found",
+                    message = ex.Message
+                };
+                await context.Response.WriteAsJsonAsync(errorResponse);
             }
             catch (ConflictException ex)
             {
-                logger.LogError(ex, ex.Message);
+                _logger.LogError(ex, "ConflictException caught: {ErrorMessage}", ex.Message);
 
+                context.Response.ContentType = "application/json";
                 context.Response.StatusCode = StatusCodes.Status409Conflict;
-                await context.Response.WriteAsync("Provided object already exist");
+                var errorResponse = new
+                {
+                    status = StatusCodes.Status409Conflict,
+                    title = "Conflict",
+                    message = ex.Message
+                };
+                await context.Response.WriteAsJsonAsync(errorResponse);
+            }
+            catch (UnauthorizedException ex)
+            {
+                _logger.LogError(ex, "UnauthorizedException caught: {ErrorMessage}", ex.Message);
+
+                context.Response.ContentType = "application/json";
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                var errorResponse = new
+                {
+                    status = StatusCodes.Status401Unauthorized,
+                    title = "Unauthorized",
+                    message = ex.Message
+                };
+                await context.Response.WriteAsJsonAsync(errorResponse);
             }
             catch (UnauthorizedAccessException ex)
             {
-                logger.LogError(ex, ex.Message);
-                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                await context.Response.WriteAsync("Unauthorized");
+                _logger.LogError(ex, "UnauthorizedAccessException caught: {ErrorMessage}", ex.Message);
+
+                context.Response.ContentType = "application/json";
+                context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                var errorResponse = new
+                {
+                    status = StatusCodes.Status403Forbidden,
+                    title = "Forbidden",
+                    message = "Unauthorized access due to insufficient permissions."
+                };
+                await context.Response.WriteAsJsonAsync(errorResponse);
             }
             catch (Exception ex)
             {
-                logger.LogError(ex.InnerException?.Message ?? ex.Message);
+                _logger.LogError(ex, "An unhandled exception occurred.");
 
+                context.Response.ContentType = "application/json";
                 context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-                await context.Response.WriteAsync(string.Join(", ", ex.InnerException?.Message ?? ex.Message));
+
+                var errorResponse = new
+                {
+                    status = StatusCodes.Status500InternalServerError,
+                    title = "Internal Server Error",
+                    message = "An internal server error occurred."
+                };
+
+                await context.Response.WriteAsJsonAsync(errorResponse);
             }
         }
     }
