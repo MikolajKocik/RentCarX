@@ -25,7 +25,7 @@ namespace RentCarX.Application.CQRS.Commands.Auth.Login
 
             if (user is null || !_passwordHasher.VerifyPasswordHash(request.Dto.Password, user.CustomPasswordHash, user.CustomPasswordSalt)) 
             {
-                throw new UnauthorizedException("Invalid credentials."); 
+                throw new UnauthorizedException("User does not exist."); 
             }
 
             return await _jwtService.GenerateToken(user); 
