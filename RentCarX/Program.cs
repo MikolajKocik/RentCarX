@@ -1,6 +1,6 @@
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using RentCarX.Application.Extensions;
-using RentCarX.Domain.Models;
 using RentCarX.Infrastructure.Data;
 using RentCarX.Infrastructure.Extensions;
 using RentCarX.Presentation.Extensions;
@@ -14,6 +14,9 @@ builder.Services.AddApplication(builder.Configuration);
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.AddPresentation();
 
+builder.Services.AddDataProtection()
+        .PersistKeysToFileSystem(new DirectoryInfo(@"C:\DataProtectionKeys"));
+
 if (builder.Environment.IsDevelopment())
 {
     // user secrets data
@@ -22,7 +25,16 @@ if (builder.Environment.IsDevelopment())
 
 var app = builder.Build();
 
-app.UseMiddleware<ErrorHandlingMiddleware>();
+app.UseSerilogRequestLogging();
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+app.UseHttpsRedirection();
+
+app.UseRouting();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 if (app.Environment.IsDevelopment())
 {
@@ -30,13 +42,16 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "RentCarX API V1");
-        c.RoutePrefix = "swagger"; 
+        c.RoutePrefix = "swagger";
     });
 
-    app.UseDeveloperExceptionPage(); // middleware
+    // Configure the HTTP request pipeline.
+
+    app.UseDeveloperExceptionPage();
+
 }
 
-app.UseSerilogRequestLogging();
+app.MapControllers();
 
 using (var scope = app.Services.CreateScope())
 {
@@ -50,15 +65,6 @@ using (var scope = app.Services.CreateScope())
         dbContext.Database.Migrate();
     }
 }
-
-// Configure the HTTP request pipeline.
-
-app.UseHttpsRedirection();
-
-app.UseAuthentication();
-app.UseAuthorization();
-
-app.MapControllers();
 
 app.Run();
 

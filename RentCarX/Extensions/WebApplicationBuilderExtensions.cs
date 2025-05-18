@@ -4,11 +4,12 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Reflection;
 using Serilog;
-using RentCarX.Presentation.Middleware;
 using MediatR;
 using FluentValidation; 
 using RentCarX.Application.PipelineBehaviors;
 using FluentValidation.AspNetCore;
+using RentCarX.Application.Services.EmailService;
+using RentCarX.Application.Interfaces.EmailService;
 
 namespace RentCarX.Presentation.Extensions
 {
@@ -16,6 +17,11 @@ namespace RentCarX.Presentation.Extensions
     {
         public static void AddPresentation(this WebApplicationBuilder builder)
         {
+            // SMTP
+
+            builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
+            builder.Services.AddTransient<IEmailService, EmailService>();
+
             // swagger configuration
 
             builder.Services.AddSwaggerGen(c =>
@@ -67,7 +73,6 @@ namespace RentCarX.Presentation.Extensions
             builder.Services.AddControllers();
 
             // Middleware configuration
-            builder.Services.AddScoped<ErrorHandlingMiddleware>();
 
             builder.Services.AddAuthorization();
 
@@ -78,7 +83,6 @@ namespace RentCarX.Presentation.Extensions
             builder.Host.UseSerilog((context, configuration) =>
                 configuration.ReadFrom.Configuration(context.Configuration)
            );
-
 
             // MediatR configuration
 

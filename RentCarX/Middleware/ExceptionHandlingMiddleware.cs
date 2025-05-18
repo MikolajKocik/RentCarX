@@ -1,48 +1,127 @@
-﻿using RentCarX.Domain.Exceptions;
+﻿using RentCarX.Domain.Exceptions; 
+using System.Net;
+using System.Text.Json; 
+using System.Text.Json.Serialization; 
 
-namespace RentCarX.Presentation.Middleware
+namespace RentCarX.Presentation.Middleware 
 {
-    public class ErrorHandlingMiddleware(ILogger<ErrorHandlingMiddleware> logger) : IMiddleware
+    public class ExceptionHandlingMiddleware
     {
-        public async Task InvokeAsync(HttpContext context, RequestDelegate next)
+        private readonly RequestDelegate _next;
+        private readonly ILogger<ExceptionHandlingMiddleware> _logger;
+
+        public ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
         {
+            _next = next;
+            _logger = logger;
+        }
+
+        public async Task InvokeAsync(HttpContext context)
+        {
+            _logger.LogInformation("ExceptionHandlingMiddleware activated"); 
+
             try
             {
-                await next.Invoke(context);
+                await _next(context);
             }
-            catch (BadRequestException ex)
+            catch (Exception ex) 
             {
-                logger.LogError(ex, ex.Message);
+                _logger.LogError(ex, $"An unhandled exception occurred: {ex.Message}");
 
-                context.Response.StatusCode = StatusCodes.Status400BadRequest;
-                await context.Response.WriteAsync("Validation failed for object");
+                await HandleExceptionAsync(context, ex); 
             }
-            catch (NotFoundException ex)
-            {
-                logger.LogError(ex, ex.Message);
+        }
 
-                context.Response.StatusCode = StatusCodes.Status404NotFound;
-                await context.Response.WriteAsync("Provided object doesnt exist");
-            }
-            catch (ConflictException ex)
-            {
-                logger.LogError(ex, ex.Message);
+        private async Task HandleExceptionAsync(HttpContext context, Exception exception)
+        {
+            context.Response.ContentType = "application/json";
 
-                context.Response.StatusCode = StatusCodes.Status409Conflict;
-                await context.Response.WriteAsync("Provided object already exist");
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                logger.LogError(ex, ex.Message);
-                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                await context.Response.WriteAsync("Unauthorized");
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex.InnerException?.Message ?? ex.Message);
+            HttpStatusCode statusCode = HttpStatusCode.InternalServerError; 
+            string title = "An unexpected internal server error occurred.";
+            string detail = "An unexpected error occurred. Please try again later."; 
+            string errorCode = "InternalServerError"; 
 
-                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-                await context.Response.WriteAsync(string.Join(", ", ex.InnerException?.Message ?? ex.Message));
+            switch (exception)
+            {
+                case BadRequestException badRequestException:
+                    statusCode = HttpStatusCode.BadRequest; 
+                    title = "Bad Request";
+                    detail = badRequestException.Message; 
+                    errorCode = null; 
+                    break;
+                case NotFoundException notFoundException:
+                    statusCode = HttpStatusCode.NotFound; 
+                    title = "Not Found";
+                    detail = notFoundException.Message; 
+                    errorCode = null; 
+                    break;
+                case ConflictException conflictException:
+                    statusCode = HttpStatusCode.Conflict; 
+                    title = "Conflict";
+                    detail = conflictException.Message; 
+                    errorCode = null; 
+                    break;
+
+                case EmailNotConfirmedException emailNotConfirmedException:
+                    statusCode = HttpStatusCode.Unauthorized;
+                    title = "Email Not Confirmed"; 
+                    detail = emailNotConfirmedException.Message; 
+                    errorCode = emailNotConfirmedException.ErrorCode; 
+                    break;
+
+                case UnauthorizedException unauthorizedException: 
+                    statusCode = HttpStatusCode.Unauthorized; 
+                    title = "Unauthorized";
+                    detail = unauthorizedException.Message;
+                    errorCode = null; 
+                    break;
+
+                case UnauthorizedAccessException unauthorizedAccessException: 
+                    statusCode = HttpStatusCode.Forbidden; 
+                    title = "Forbidden";
+                    detail = "Access denied due to insufficient permissions."; 
+                    errorCode = null; 
+                    break;
+
+                default:
+                    break;
+            }
+
+            context.Response.StatusCode = (int)statusCode;
+
+            var errorResponse = new ErrorDetails
+            {
+                Status = (int)statusCode,
+                Title = title,
+                Detail = detail,
+                ErrorCode = errorCode 
+            };
+
+            var options = new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull 
+            };
+
+            await context.Response.WriteAsJsonAsync(errorResponse, options);
+        }
+
+        private class ErrorDetails
+        {
+            public int Status { get; set; } 
+            public string Title { get; set; } 
+            public string Detail { get; set; } 
+
+            public string? ErrorCode { get; set; }
+
+            public ErrorDetails() { }
+
+            public ErrorDetails(int status, string title, string detail, string? errorCode = null)
+            {
+                Status = status;
+                Title = title;
+                Detail = detail;
+                ErrorCode = errorCode;
             }
         }
     }
