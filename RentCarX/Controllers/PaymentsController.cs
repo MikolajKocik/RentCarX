@@ -1,0 +1,26 @@
+﻿using Microsoft.AspNetCore.Mvc;
+using RentCarX.Domain.Interfaces.Services.Stripe;
+using RentCarX.Domain.Models;
+
+namespace RentCarX.Presentation.Controllers
+{
+    [ApiController]
+    [Route("api/[controller]")]
+    public class PaymentsController : ControllerBase
+    {
+        private readonly IPaymentService _paymentService;
+
+        public PaymentsController(IPaymentService paymentService)
+        {
+            _paymentService = paymentService;
+        }
+
+        [HttpPost("create-checkout-session")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> CreateCheckoutSession([FromBody] Reservation reservation, CancellationToken cancellationToken)
+        {
+            var sessionUrl = await _paymentService.CreateCheckoutSessionAsync(reservation, cancellationToken);
+            return Ok(new { url = sessionUrl });
+        }
+    }
+}
