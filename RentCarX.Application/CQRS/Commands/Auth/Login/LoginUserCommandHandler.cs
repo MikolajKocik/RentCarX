@@ -1,31 +1,33 @@
 ﻿using MediatR;
+using Microsoft.AspNetCore.Identity;
 using RentCarX.Application.Interfaces.JWT;
-using RentCarX.Application.Interfaces.PasswordHasher; 
 using RentCarX.Domain.Exceptions;
-using RentCarX.Domain.Interfaces.Repositories; 
 
 namespace RentCarX.Application.CQRS.Commands.Auth.Login
 {
     public class LoginUserCommandHandler : IRequestHandler<LoginUserCommand, string>
     {
-        private readonly IUserRepository _userRepository;
         private readonly IJwtTokenService _jwtService;
-        private readonly IPasswordHasher _passwordHasher; 
+        private readonly UserManager<User> _userManager;
 
-        public LoginUserCommandHandler(IUserRepository userRepository, IJwtTokenService jwtService, IPasswordHasher passwordHasher)
+        public LoginUserCommandHandler(UserManager<User> userManager, IJwtTokenService jwtService)
         {
-            _userRepository = userRepository;
+            _userManager = userManager;
             _jwtService = jwtService;
-            _passwordHasher = passwordHasher;
         }
 
         public async Task<string> Handle(LoginUserCommand request, CancellationToken cancellationToken)
         {
-            var user = await _userRepository.GetUserByEmailAsync(request.Dto.Email, cancellationToken);
+            var user = await _userManager.FindByEmailAsync(request.Dto.Email);
 
-            if (user is null || !_passwordHasher.VerifyPasswordHash(request.Dto.Password, user.CustomPasswordHash, user.CustomPasswordSalt)) 
+            if (user is null || !await _userManager.CheckPasswordAsync(user, request.Dto.Password))
             {
-                throw new UnauthorizedException("User does not exist."); 
+                throw new UnauthorizedException("Invalid email or password.");
+            }
+
+            if (!user.EmailConfirmed)
+            {
+                throw new EmailNotConfirmedException("Please confirm your email address before logging in.");
             }
 
             return await _jwtService.GenerateToken(user); 

@@ -1,6 +1,9 @@
-﻿using RentCarX.Domain.Exceptions;
+﻿using RentCarX.Domain.Exceptions; 
+using System.Net;
+using System.Text.Json; 
+using System.Text.Json.Serialization; 
 
-namespace RentCarX.Presentation.Middleware
+namespace RentCarX.Presentation.Middleware 
 {
     public class ExceptionHandlingMiddleware
     {
@@ -15,98 +18,110 @@ namespace RentCarX.Presentation.Middleware
 
         public async Task InvokeAsync(HttpContext context)
         {
-            _logger.LogInformation("ExceptionHandlingMiddleware activated");
+            _logger.LogInformation("ExceptionHandlingMiddleware activated"); 
 
             try
             {
                 await _next(context);
             }
-            catch (BadRequestException ex)
+            catch (Exception ex) 
             {
-                _logger.LogError(ex, "BadRequestException caught: {ErrorMessage}", ex.Message);
+                _logger.LogError(ex, $"An unhandled exception occurred: {ex.Message}");
 
-                context.Response.ContentType = "application/json";
-                context.Response.StatusCode = StatusCodes.Status400BadRequest;
-
-                var errorResponse = new
-                {
-                    status = StatusCodes.Status400BadRequest,
-                    title = "Bad Request",
-                    message = "Validation failed for the request."
-                };
-                await context.Response.WriteAsJsonAsync(errorResponse);
+                await HandleExceptionAsync(context, ex); 
             }
-            catch (NotFoundException ex)
-            {
-                _logger.LogError(ex, "NotFoundException caught: {ErrorMessage}", ex.Message);
+        }
 
-                context.Response.ContentType = "application/json";
-                context.Response.StatusCode = StatusCodes.Status404NotFound;
-                var errorResponse = new
-                {
-                    status = StatusCodes.Status404NotFound,
-                    title = "Not Found",
-                    message = ex.Message
-                };
-                await context.Response.WriteAsJsonAsync(errorResponse);
+        private async Task HandleExceptionAsync(HttpContext context, Exception exception)
+        {
+            context.Response.ContentType = "application/json";
+
+            HttpStatusCode statusCode = HttpStatusCode.InternalServerError; 
+            string title = "An unexpected internal server error occurred.";
+            string detail = "An unexpected error occurred. Please try again later."; 
+            string errorCode = "InternalServerError"; 
+
+            switch (exception)
+            {
+                case BadRequestException badRequestException:
+                    statusCode = HttpStatusCode.BadRequest; 
+                    title = "Bad Request";
+                    detail = badRequestException.Message; 
+                    errorCode = null; 
+                    break;
+                case NotFoundException notFoundException:
+                    statusCode = HttpStatusCode.NotFound; 
+                    title = "Not Found";
+                    detail = notFoundException.Message; 
+                    errorCode = null; 
+                    break;
+                case ConflictException conflictException:
+                    statusCode = HttpStatusCode.Conflict; 
+                    title = "Conflict";
+                    detail = conflictException.Message; 
+                    errorCode = null; 
+                    break;
+
+                case EmailNotConfirmedException emailNotConfirmedException:
+                    statusCode = HttpStatusCode.Unauthorized;
+                    title = "Email Not Confirmed"; 
+                    detail = emailNotConfirmedException.Message; 
+                    errorCode = emailNotConfirmedException.ErrorCode; 
+                    break;
+
+                case UnauthorizedException unauthorizedException: 
+                    statusCode = HttpStatusCode.Unauthorized; 
+                    title = "Unauthorized";
+                    detail = unauthorizedException.Message;
+                    errorCode = null; 
+                    break;
+
+                case UnauthorizedAccessException unauthorizedAccessException: 
+                    statusCode = HttpStatusCode.Forbidden; 
+                    title = "Forbidden";
+                    detail = "Access denied due to insufficient permissions."; 
+                    errorCode = null; 
+                    break;
+
+                default:
+                    break;
             }
-            catch (ConflictException ex)
+
+            context.Response.StatusCode = (int)statusCode;
+
+            var errorResponse = new ErrorDetails
             {
-                _logger.LogError(ex, "ConflictException caught: {ErrorMessage}", ex.Message);
+                Status = (int)statusCode,
+                Title = title,
+                Detail = detail,
+                ErrorCode = errorCode 
+            };
 
-                context.Response.ContentType = "application/json";
-                context.Response.StatusCode = StatusCodes.Status409Conflict;
-                var errorResponse = new
-                {
-                    status = StatusCodes.Status409Conflict,
-                    title = "Conflict",
-                    message = ex.Message
-                };
-                await context.Response.WriteAsJsonAsync(errorResponse);
-            }
-            catch (UnauthorizedException ex)
+            var options = new JsonSerializerOptions
             {
-                _logger.LogError(ex, "UnauthorizedException caught: {ErrorMessage}", ex.Message);
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull 
+            };
 
-                context.Response.ContentType = "application/json";
-                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                var errorResponse = new
-                {
-                    status = StatusCodes.Status401Unauthorized,
-                    title = "Unauthorized",
-                    message = ex.Message
-                };
-                await context.Response.WriteAsJsonAsync(errorResponse);
-            }
-            catch (UnauthorizedAccessException ex)
+            await context.Response.WriteAsJsonAsync(errorResponse, options);
+        }
+
+        private class ErrorDetails
+        {
+            public int Status { get; set; } 
+            public string Title { get; set; } 
+            public string Detail { get; set; } 
+
+            public string? ErrorCode { get; set; }
+
+            public ErrorDetails() { }
+
+            public ErrorDetails(int status, string title, string detail, string? errorCode = null)
             {
-                _logger.LogError(ex, "UnauthorizedAccessException caught: {ErrorMessage}", ex.Message);
-
-                context.Response.ContentType = "application/json";
-                context.Response.StatusCode = StatusCodes.Status403Forbidden;
-                var errorResponse = new
-                {
-                    status = StatusCodes.Status403Forbidden,
-                    title = "Forbidden",
-                    message = "Unauthorized access due to insufficient permissions."
-                };
-                await context.Response.WriteAsJsonAsync(errorResponse);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An unhandled exception occurred.");
-
-                context.Response.ContentType = "application/json";
-                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-
-                var errorResponse = new
-                {
-                    status = StatusCodes.Status500InternalServerError,
-                    title = "Internal Server Error",
-                    message = "An internal server error occurred."
-                };
-
-                await context.Response.WriteAsJsonAsync(errorResponse);
+                Status = status;
+                Title = title;
+                Detail = detail;
+                ErrorCode = errorCode;
             }
         }
     }

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using RentCarX.Application.Extensions;
 using RentCarX.Infrastructure.Data;
@@ -13,6 +14,8 @@ builder.Services.AddApplication(builder.Configuration);
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.AddPresentation();
 
+builder.Services.AddDataProtection()
+        .PersistKeysToFileSystem(new DirectoryInfo(@"C:\DataProtectionKeys"));
 
 if (builder.Environment.IsDevelopment())
 {

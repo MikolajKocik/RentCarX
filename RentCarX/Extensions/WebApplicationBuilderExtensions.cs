@@ -8,7 +8,8 @@ using MediatR;
 using FluentValidation; 
 using RentCarX.Application.PipelineBehaviors;
 using FluentValidation.AspNetCore;
-using RentCarX.Presentation.Middleware;
+using RentCarX.Application.Services.EmailService;
+using RentCarX.Application.Interfaces.EmailService;
 
 namespace RentCarX.Presentation.Extensions
 {
@@ -16,6 +17,11 @@ namespace RentCarX.Presentation.Extensions
     {
         public static void AddPresentation(this WebApplicationBuilder builder)
         {
+            // SMTP
+
+            builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
+            builder.Services.AddTransient<IEmailService, EmailService>();
+
             // swagger configuration
 
             builder.Services.AddSwaggerGen(c =>
