@@ -46,16 +46,16 @@ namespace RentCarX.Application.CQRS.Commands.Auth.ForgotPassword
 
             try
             {
-                var emailSubject = "Instrukcja resetowania hasła w RentCarX";
+                var emailSubject = "RentCarX password reset instructions";
                 var emailBody = $@"
                 <html>
                 <body>
-                    <p>Witaj {user.UserName ?? user.Email},</p>
-                    <p>Otrzymaliśmy prośbę o zresetowanie hasła do Twojego konta w RentCarX.</p>
-                    <p>Aby zresetować hasło, kliknij w poniższy link:</p>
-                    <p><a href='{resetLink}'>Zresetuj swoje hasło</a></p>
-                    <p>Ten link wygaśnie po określonym czasie (np. 24 godziny) i może być użyty tylko raz.</p>
-                    <p>Jeśli nie prosiłeś o zresetowanie hasła, zignoruj tę wiadomość.</p>
+                    <p>Hello {user.UserName ?? user.Email},</p>
+                    <p>We have received a request to reset your password for your RentCarX account.</p>
+                    <p>To reset your password, click the link below:</p>
+                    <p><a href='{resetLink}'>Reset your password</a></p>
+                    <p>This link will expire after a specified period of time (e.g. 24 hours) and can only be used once.</p>
+                    <p>If you have not requested a password reset, please ignore this message.</p>
                 </body>
                 </html>";
 

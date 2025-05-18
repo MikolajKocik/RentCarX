@@ -60,15 +60,15 @@ namespace RentCarX.Application.CQRS.Commands.Auth.Register
 
             try
             {
-                var subject = "Potwierdzenie adresu e-mail w RentCarX";
+                var subject = "RentCarX email address confirmation";
                 var body = $@"
                 <html>
                     <body>
-                        <p>Witaj {user.UserName},</p>
-                        <p>Dziękujemy za rejestrację w RentCarX.</p>
-                        <p>Kliknij w link, aby potwierdzić adres e-mail:</p>
-                        <p><a href='{confirmationUrl}'>Potwierdź swój adres e-mail</a></p>
-                        <p>Jeśli to nie Ty się rejestrowałeś, zignoruj tę wiadomość.</p>
+                        <p>Hello {user.UserName},</p>
+                        <p>Thank you for registering with RentCarX.</p>
+                        <p>Click on the link to confirm your email address:</p>
+                        <p><a href='{confirmationUrl}'>Confirm your email address</a></p>
+                        <p>If you are not the one who registered, please ignore this message.</p>
                     </body>
                 </html>";
 
