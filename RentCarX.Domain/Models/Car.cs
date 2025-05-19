@@ -10,6 +10,10 @@
         public decimal PricePerDay { get; set; }
         public bool IsAvailable { get; set; } = true;
 
-        public List<Reservation> Reservations { get; set; } = new List<Reservation>();
+        // Stripe integration
+        public string? StripeProductId { get; set; }
+        public string? StripePriceId { get; set; }
+
+        public List<Reservation> Reservations { get; set; } = new();
     }
 }

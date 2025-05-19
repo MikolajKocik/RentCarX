@@ -10,6 +10,7 @@ using RentCarX.Domain.Interfaces.UserContext;
 using RentCarX.Infrastructure.Data;
 using RentCarX.Infrastructure.Repositories;
 using RentCarX.Infrastructure.Services;
+using RentCarX.Infrastructure.Services.Stripe;
 
 namespace RentCarX.Infrastructure.Extensions
 {
@@ -41,6 +42,7 @@ namespace RentCarX.Infrastructure.Extensions
 
             services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 
+            services.AddScoped<IStripeProductService, StripeProductService>();
             services.AddScoped<IPaymentService, PaymentService>();
 
             services.AddScoped<IJwtTokenService, JwtTokenService>();
