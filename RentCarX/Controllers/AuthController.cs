@@ -10,7 +10,8 @@ using RentCarX.Application.DTOs.Auth;
 
 namespace RentCarX.Presentation.Controllers
 {
-    [Route("api/auth")] 
+    [Route("api/auth")]
+    [AllowAnonymous]
     [ApiController]
     public class AuthController : ControllerBase
     {
@@ -22,7 +23,6 @@ namespace RentCarX.Presentation.Controllers
         }
 
         [HttpPost("register")]
-        [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK)] 
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
@@ -37,7 +37,6 @@ namespace RentCarX.Presentation.Controllers
         }
 
         [HttpPost("login")]
-        [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -52,7 +51,6 @@ namespace RentCarX.Presentation.Controllers
         }
 
         [HttpPost("confirm-email")]
-        [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -63,7 +61,6 @@ namespace RentCarX.Presentation.Controllers
         }
 
         [HttpPost("forgot-password")]
-        [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK)] 
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -76,7 +73,6 @@ namespace RentCarX.Presentation.Controllers
         }
 
         [HttpPost("reset-password")]
-        [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]

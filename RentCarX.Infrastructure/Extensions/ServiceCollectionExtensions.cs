@@ -10,6 +10,7 @@ using RentCarX.Domain.Interfaces.UserContext;
 using RentCarX.Infrastructure.Data;
 using RentCarX.Infrastructure.Repositories;
 using RentCarX.Infrastructure.Services;
+using RentCarX.Infrastructure.Services.JWT;
 using RentCarX.Infrastructure.Services.Stripe;
 
 namespace RentCarX.Infrastructure.Extensions

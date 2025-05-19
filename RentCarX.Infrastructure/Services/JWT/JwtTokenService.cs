@@ -4,9 +4,9 @@ using RentCarX.Application.Interfaces.JWT;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Microsoft.AspNetCore.Identity; 
+using Microsoft.AspNetCore.Identity;
 
-namespace RentCarX.Infrastructure.Services
+namespace RentCarX.Infrastructure.Services.JWT
 {
     public class JwtTokenService : IJwtTokenService
     {

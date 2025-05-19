@@ -2,7 +2,6 @@
 using Microsoft.OpenApi.Models;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using System.Reflection;
 using Serilog;
 using MediatR;
 using FluentValidation; 
@@ -10,6 +9,7 @@ using RentCarX.Application.PipelineBehaviors;
 using FluentValidation.AspNetCore;
 using RentCarX.Application.Services.EmailService;
 using RentCarX.Application.Interfaces.EmailService;
+using RentCarX.Application.MappingsProfile;
 
 namespace RentCarX.Presentation.Extensions
 {
@@ -57,6 +57,24 @@ namespace RentCarX.Presentation.Extensions
                 .AddJwtBearer(options =>
                 {
                     var config = builder.Configuration;
+
+                    Console.WriteLine("\n--- DEBUG: Configuration JWT Validation ---");
+                    Console.WriteLine($"DEBUG: Config Jwt:Key (raw): {config["Jwt:Key"]}");
+                    Console.WriteLine($"DEBUG: Config Jwt:Issuer: {config["Jwt:Issuer"]}");
+                    Console.WriteLine($"DEBUG: Config Jwt:Audience: {config["Jwt:Audience"]}");
+
+                    try
+                    {
+                        var keyBytes = Encoding.UTF8.GetBytes(config["Jwt:Key"]!);
+                        Console.WriteLine($"DEBUG: Config Jwt:Key (Base64 from config): {Convert.ToBase64String(keyBytes)}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"DEBUG: Bad JWT key conversion on bytes/Base64: {ex.Message}");
+                    }
+
+                    Console.WriteLine("----------------------------------------");
+
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
                         ValidateIssuer = true,
@@ -66,8 +84,26 @@ namespace RentCarX.Presentation.Extensions
                         ValidateIssuerSigningKey = true,
                         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["Jwt:Key"]!)),
                         ValidateLifetime = true,
-                        ClockSkew = TimeSpan.Zero
+                        ClockSkew = TimeSpan.Zero,
                     };
+
+                    Console.WriteLine("\n--- DEBUG: Final TokenValidationParameters ---");
+                    Console.WriteLine($"DEBUG: ValidIssuer: {options.TokenValidationParameters.ValidIssuer}");
+                    Console.WriteLine($"DEBUG: ValidAudience: {options.TokenValidationParameters.ValidAudience}");
+
+
+                    if (options.TokenValidationParameters.IssuerSigningKey is SymmetricSecurityKey symmetricKey)
+                    {
+                        Console.WriteLine($"DEBUG: IssuerSigningKey (Base64 from SymmetricSecurityKey object): {Convert.ToBase64String(symmetricKey.Key)}");
+                    }
+                    else
+                    {
+                        Console.WriteLine("DEBUG: IssuerSigningKey is not type of SymmetricSecurityKey.");
+                    }
+                    Console.WriteLine($"DEBUG: ValidateLifetime: {options.TokenValidationParameters.ValidateLifetime}");
+                    Console.WriteLine($"DEBUG: ClockSkew: {options.TokenValidationParameters.ClockSkew}");
+                    Console.WriteLine($"DEBUG: RoleClaimType (Default): {options.TokenValidationParameters.RoleClaimType}"); // Oczekiwany rezultat default ClaimTypes.Role
+                    Console.WriteLine("--------------------------------------------");
                 });
 
             builder.Services.AddControllers();
@@ -77,7 +113,8 @@ namespace RentCarX.Presentation.Extensions
             builder.Services.AddAuthorization();
 
             // AutoMapper configuration
-            builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
+            builder.Services.AddAutoMapper(typeof(CarMappingProfile).Assembly);
+            builder.Services.AddAutoMapper(typeof(ReservationMappingProfile).Assembly);
 
             // Serilog configuration
             builder.Host.UseSerilog((context, configuration) =>

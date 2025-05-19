@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RentCarX.Application.CQRS.Commands.Car.AddCar;
@@ -20,8 +21,8 @@ public class CarController : ControllerBase
         _mediator = mediator;
     }
 
-    [AllowAnonymous]
     [HttpGet]
+    [AllowAnonymous]
     [ProducesResponseType(StatusCodes.Status200OK)] 
     [ProducesResponseType(StatusCodes.Status400BadRequest)] 
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -40,12 +41,14 @@ public class CarController : ControllerBase
         return Ok(cars);
     }
 
-    [Authorize(Roles = "Admin")]
     [HttpPost]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
     [ProducesResponseType(StatusCodes.Status201Created)] 
+    [ProducesResponseType(StatusCodes.Status302Found)] 
     [ProducesResponseType(StatusCodes.Status400BadRequest)] 
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)] 
+    [ProducesResponseType(StatusCodes.Status404NotFound)] 
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Create([FromBody] CreateCarCommand command, CancellationToken cancellationToken)
     {
@@ -53,8 +56,8 @@ public class CarController : ControllerBase
         return CreatedAtAction(nameof(GetCarById), new { id }, id);
     }
 
-    [AllowAnonymous]
     [HttpGet("{id:guid}")]
+    [AllowAnonymous]
     [ProducesResponseType(StatusCodes.Status200OK)] 
     [ProducesResponseType(StatusCodes.Status404NotFound)] 
     [ProducesResponseType(StatusCodes.Status400BadRequest)] 
@@ -67,9 +70,10 @@ public class CarController : ControllerBase
         return Ok(car);
     }
 
-    [Authorize(Roles = "Admin")]
     [HttpPut("{id:guid}")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)] 
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status302Found)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)] 
     [ProducesResponseType(StatusCodes.Status404NotFound)] 
     [ProducesResponseType(StatusCodes.Status401Unauthorized)] 
@@ -83,9 +87,10 @@ public class CarController : ControllerBase
         return NoContent();
     }
 
-    [Authorize(Roles = "Admin")]
     [HttpDelete("{id:guid}")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)] 
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status302Found)]
     [ProducesResponseType(StatusCodes.Status404NotFound)] 
     [ProducesResponseType(StatusCodes.Status401Unauthorized)] 
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
