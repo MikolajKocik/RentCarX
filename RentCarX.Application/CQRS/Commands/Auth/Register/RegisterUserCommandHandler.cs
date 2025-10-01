@@ -53,11 +53,11 @@ namespace RentCarX.Application.CQRS.Commands.Auth.Register
 
             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
             var encodedToken = WebUtility.UrlEncode(token); 
-
+            // TODO url front-web
             var frontendUrl = _configuration["FrontendUrl"] ?? "https://yourfrontend.com";
 
             var confirmationUrl = $"{frontendUrl.TrimEnd('/')}/confirm-email?userId={user.Id}&token={encodedToken}";
-
+            //
             try
             {
                 var subject = "RentCarX email address confirmation";

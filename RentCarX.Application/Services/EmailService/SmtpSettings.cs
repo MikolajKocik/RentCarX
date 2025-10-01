@@ -1,6 +1,6 @@
 ﻿namespace RentCarX.Application.Services.EmailService
 {
-    public class SmtpSettings
+    public sealed class SmtpSettings
     {
         public string Server { get; set; }
         public int Port { get; set; }
