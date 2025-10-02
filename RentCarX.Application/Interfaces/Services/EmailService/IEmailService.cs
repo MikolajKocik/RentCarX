@@ -1,4 +1,4 @@
-﻿namespace RentCarX.Application.Interfaces.EmailService
+﻿namespace RentCarX.Application.Interfaces.Services.EmailService
 {
     public interface IEmailService
     {

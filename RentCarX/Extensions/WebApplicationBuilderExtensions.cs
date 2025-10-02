@@ -4,12 +4,12 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Serilog;
 using MediatR;
-using FluentValidation; 
+using FluentValidation;
 using RentCarX.Application.PipelineBehaviors;
 using FluentValidation.AspNetCore;
 using RentCarX.Application.Services.EmailService;
-using RentCarX.Application.Interfaces.EmailService;
 using RentCarX.Application.MappingsProfile;
+using RentCarX.Application.Interfaces.Services.EmailService;
 
 namespace RentCarX.Presentation.Extensions
 {
@@ -126,10 +126,18 @@ namespace RentCarX.Presentation.Extensions
             builder.Services.AddValidatorsFromAssembly(typeof(AssemblyMarker).Assembly)
                 .AddFluentValidationAutoValidation();
 
-            builder.Services.AddMediatR(cfg => {
+            builder.Services.AddMediatR(cfg =>
+            {
                 cfg.RegisterServicesFromAssembly(typeof(AssemblyMarker).Assembly);
                 cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(RequestValidationBehavior<,>));
             });
+
+            var stripeApiKey = builder.Configuration.GetValue<string>("STRIPE_API_KEY");
+
+            if (string.IsNullOrEmpty(stripeApiKey))
+            {
+                throw new InvalidOperationException("Stripe Secret Key environment variable 'STRIPE_API_KEY' is not set.");
+            }
         }
     }
 }

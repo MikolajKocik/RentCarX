@@ -1,34 +1,47 @@
 ﻿using Microsoft.Extensions.Configuration;
-using RentCarX.Domain.Models;
+using RentCarX.Application.DTOs.Stripe;
+using RentCarX.Domain.Interfaces.Repositories;
+using RentCarX.Domain.Interfaces.Services.Stripe;
 using Stripe;
 using Stripe.Checkout;
-using RentCarX.Domain.Interfaces.Services.Stripe;
 
 namespace RentCarX.Infrastructure.Services
 {
     public class PaymentService : IPaymentService
     {
         private readonly IConfiguration _configuration;
+        private readonly StripeClient _stripeClient;
+        private readonly IReservationRepository _reservationRepository;
 
-        public PaymentService(IConfiguration configuration)
+        public PaymentService(
+            IConfiguration configuration,
+            StripeClient stripeClient,
+            IReservationRepository reservationRepository
+            )
         {
+            _reservationRepository = reservationRepository;
             _configuration = configuration;
-
-            string? stripeSecretKey = Environment.GetEnvironmentVariable("STRIPE_API_KEY");
-
-            if (string.IsNullOrEmpty(stripeSecretKey))
-            {
-                throw new InvalidOperationException("Stripe Secret Key environment variable 'STRIPE_API_KEY' is not set.");
-            }
-
-            StripeConfiguration.ApiKey = stripeSecretKey;
+            _stripeClient = stripeClient;
         }
 
-        public async Task<string> CreateCheckoutSessionAsync(Reservation reservation, CancellationToken cancellationToken)
+        public async Task<string> CreateCheckoutSessionAsync(CreateCheckoutSessionRequest request, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrEmpty(reservation.Car.StripePriceId))
+            if (request.ReservationId == Guid.Empty)
             {
-                throw new InvalidOperationException("This car has no Stripe Price ID assigned. Please sync it first.");
+                throw new InvalidOperationException("Reservation ID is missing in the request.");
+            }
+
+
+            var reservation = await _reservationRepository.GetReservationByIdAsync(request.ReservationId, cancellationToken);
+
+            if (reservation is null)
+            {
+                throw new KeyNotFoundException($"Reservation with ID {request.ReservationId} not found.");
+            }
+
+            if (reservation.Car is null || string.IsNullOrEmpty(reservation.Car.StripePriceId))
+            {
+                throw new InvalidOperationException($"Cannot create checkout session. Car or Stripe Price ID is missing for reservation {reservation.Id}. Ensure the product is synced.");
             }
 
             var options = new SessionCreateOptions
@@ -52,7 +65,7 @@ namespace RentCarX.Infrastructure.Services
                 }
             };
 
-            var service = new SessionService();
+            var service = new SessionService(_stripeClient);
             var session = await service.CreateAsync(options, cancellationToken: cancellationToken);
 
             return session.Url;

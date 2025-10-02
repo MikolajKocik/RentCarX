@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using RentCarX.Application.DTOs.Auth;
-using RentCarX.Application.Interfaces.EmailService;
+using RentCarX.Application.Interfaces.Services.EmailService;
 
 namespace RentCarX.Application.CQRS.Commands.Auth.ForgotPassword
 {

@@ -47,64 +47,67 @@ app.UseRouting();
 
 app.UseAuthentication();
 
-// debugowanie uwierzytelniania jwt
-
-app.Use(async (context, next) =>
+if (app.Environment.IsDevelopment())
 {
-    Console.WriteLine("\n--- Check HttpContext.User after authentication ---");
+    // debugowanie uwierzytelniania jwt
 
-    // HttpContext.User jest ustawiany przez middleware uwierzytelniania
-    var user = context.User;
-
-    if (user != null && user.Identity != null && user.Identity.IsAuthenticated)
+    app.Use(async (context, next) =>
     {
-        Console.WriteLine($"User Authenticated: YES");
-        Console.WriteLine($"Authentication type: {user.Identity.AuthenticationType ?? "Empty"}"); 
+        Console.WriteLine("\n--- Check HttpContext.User after authentication ---");
 
-        Console.WriteLine("User claims:");
-        bool isAdminClaimPresent = false;
-        if (user.Claims != null)
+        // HttpContext.User jest ustawiany przez middleware uwierzytelniania
+        var user = context.User;
+
+        if (user != null && user.Identity != null && user.Identity.IsAuthenticated)
         {
-            foreach (var claim in user.Claims)
+            Console.WriteLine($"User Authenticated: YES");
+            Console.WriteLine($"Authentication type: {user.Identity.AuthenticationType ?? "Empty"}");
+
+            Console.WriteLine("User claims:");
+            bool isAdminClaimPresent = false;
+            if (user.Claims != null)
             {
-                Console.WriteLine($"- Type: {claim.Type}, Value: {claim.Value}");
-                if (claim.Type == "http://schemas.microsoft.com/ws/2008/06/identity/claims/role" && claim.Value == "Admin")
+                foreach (var claim in user.Claims)
                 {
-                    isAdminClaimPresent = true;
+                    Console.WriteLine($"- Type: {claim.Type}, Value: {claim.Value}");
+                    if (claim.Type == "http://schemas.microsoft.com/ws/2008/06/identity/claims/role" && claim.Value == "Admin")
+                    {
+                        isAdminClaimPresent = true;
+                    }
                 }
             }
+            else
+            {
+                Console.WriteLine("No claims assigned to the user.");
+            }
+
+            Console.WriteLine($"Claim's role 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role' with value 'Admin' found: {isAdminClaimPresent}");
+            Console.WriteLine($"Result IsInRole('Admin'): {user.IsInRole("Admin")}"); // opiera siê na claimach typu ClaimTypes.Role
+
         }
         else
         {
-            Console.WriteLine("No claims assigned to the user.");
+            Console.WriteLine("User not authenticated.");
+            if (user != null && user.Identity != null)
+            {
+                Console.WriteLine($"Identity.IsAuthenticated: {user.Identity.IsAuthenticated}");
+                Console.WriteLine($"Identity.AuthenticationType: {user.Identity.AuthenticationType ?? "Empty"}");
+            }
+            else if (user == null)
+            {
+                Console.WriteLine("HttpContext.User jest null.");
+            }
+            else if (user.Identity == null)
+            {
+                Console.WriteLine("HttpContext.User.Identity jest null.");
+            }
         }
 
-        Console.WriteLine($"Claim's role 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role' with value 'Admin' found: {isAdminClaimPresent}");
-        Console.WriteLine($"Result IsInRole('Admin'): {user.IsInRole("Admin")}"); // opiera siê na claimach typu ClaimTypes.Role
+        Console.WriteLine("-------------------------------------------------------");
 
-    }
-    else
-    {
-        Console.WriteLine("User not authenticated.");
-        if (user != null && user.Identity != null)
-        {
-            Console.WriteLine($"Identity.IsAuthenticated: {user.Identity.IsAuthenticated}");
-            Console.WriteLine($"Identity.AuthenticationType: {user.Identity.AuthenticationType ?? "Empty"}");
-        }
-        else if (user == null)
-        {
-            Console.WriteLine("HttpContext.User jest null.");
-        }
-        else if (user.Identity == null)
-        {
-            Console.WriteLine("HttpContext.User.Identity jest null.");
-        }
-    }
-
-    Console.WriteLine("-------------------------------------------------------");
-
-    await next();
-});
+        await next();
+    });
+}
 
 app.UseAuthorization();
 
@@ -127,7 +130,7 @@ if (app.Environment.IsDevelopment())
 
 app.MapControllers();
 
-// konfiguracja migracji bazy danych, jeœli s¹ niezupdatetowane, automatycznie -> update database
+// auto-migrating
 
 using (var scope = app.Services.CreateScope())
 {
@@ -142,4 +145,4 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-app.Run();
+await app.RunAsync();

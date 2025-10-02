@@ -2,11 +2,11 @@
 using RentCarX.Application.Interfaces.JWT;
 using RentCarX.Domain.Exceptions;
 using Microsoft.AspNetCore.Identity;
-using RentCarX.Application.Interfaces.EmailService;
 using RentCarX.Application.DTOs.Auth;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Net;
+using RentCarX.Application.Interfaces.Services.EmailService;
 
 namespace RentCarX.Application.CQRS.Commands.Auth.Register
 {

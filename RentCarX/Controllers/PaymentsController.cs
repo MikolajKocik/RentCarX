@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using RentCarX.Application.DTOs.Stripe;
 using RentCarX.Domain.Interfaces.Services.Stripe;
 using RentCarX.Domain.Models;
 
@@ -17,9 +18,9 @@ namespace RentCarX.Presentation.Controllers
 
         [HttpPost("create-checkout-session")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<IActionResult> CreateCheckoutSession([FromBody] Reservation reservation, CancellationToken cancellationToken)
+        public async Task<IActionResult> CreateCheckoutSession([FromBody] CreateCheckoutSessionRequest request, CancellationToken cancellationToken)
         {
-            var sessionUrl = await _paymentService.CreateCheckoutSessionAsync(reservation, cancellationToken);
+            var sessionUrl = await _paymentService.CreateCheckoutSessionAsync(request, cancellationToken);
             return Ok(new { url = sessionUrl });
         }
     }

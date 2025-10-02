@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.Options;
-using RentCarX.Application.Interfaces.EmailService;
+using RentCarX.Application.Interfaces.Services.EmailService;
 using RentCarX.Application.Services.EmailService;
 using System.Net;
 using System.Net.Mail;

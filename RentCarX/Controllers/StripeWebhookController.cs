@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using RentCarX.Domain.Interfaces.Services.Stripe;
 using Stripe;
 using Stripe.Checkout;
 
@@ -10,15 +11,21 @@ namespace RentCarX.Presentation.Controllers
     {
         private readonly ILogger<StripeWebhookController> _logger;
         private readonly IConfiguration _configuration;
+        private readonly IStripeWebhookHandler _stripeWebhookHandler;
 
-        public StripeWebhookController(ILogger<StripeWebhookController> logger, IConfiguration configuration)
+        public StripeWebhookController(
+            ILogger<StripeWebhookController> logger,
+            IConfiguration configuration,
+            IStripeWebhookHandler stripeWebhookHandler
+            )
         {
             _logger = logger;
             _configuration = configuration;
+            _stripeWebhookHandler = stripeWebhookHandler;
         }
 
         [HttpPost("webhook")]
-        public async Task<IActionResult> StripeWebhook()
+        public async Task<IActionResult> StripeWebhook(CancellationToken cancellationToken)
         {
             var json = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
 
@@ -48,6 +55,8 @@ namespace RentCarX.Presentation.Controllers
 
                 // TODO: oznaczyć rezerwację jako opłaconą w DB
             }
+
+            await _stripeWebhookHandler.HandleEventAsync(stripeEvent, cancellationToken);
 
             return Ok();
         }
