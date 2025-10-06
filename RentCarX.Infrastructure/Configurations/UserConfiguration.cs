@@ -1,10 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using RentCarX.Domain.Models;
+using RentCarX.Domain.Models.Stripe;
 
 namespace RentCarX.Infrastructure.Configurations
 {
-    public class UserConfiguration : IEntityTypeConfiguration<User>
+    public sealed class UserConfiguration : IEntityTypeConfiguration<User>
     {
         public void Configure(EntityTypeBuilder<User> builder)
         {
@@ -21,6 +21,14 @@ namespace RentCarX.Infrastructure.Configurations
                    .WithOne(r => r.User)
                    .HasForeignKey(r => r.UserId)
                    .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(u => u.StripeCustromer)
+                .WithOne(c => c.User)
+                .HasForeignKey<StripeCustomer>(c => c.Id);
+
+            builder.HasMany(u => u.Payments)
+                .WithOne(p => p.User)
+                .HasForeignKey(p => p.UserId);
         }
     }
 }

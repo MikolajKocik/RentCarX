@@ -1,6 +1,6 @@
 ﻿namespace RentCarX.Domain.Models
 {
-    public class Car
+    public sealed class Car
     {
         public Guid Id { get; set; }
         public string Brand { get; set; } = default!;

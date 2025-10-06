@@ -1,6 +1,6 @@
 ﻿namespace RentCarX.Domain.Models
 {
-    public class Reservation
+    public sealed class Reservation
     {
         public Guid Id { get; set; }
         public Guid CarId { get; set; }
