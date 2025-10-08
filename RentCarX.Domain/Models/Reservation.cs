@@ -15,5 +15,6 @@
         public Car Car { get; set; } = default!;
 
         public User User { get; set; } = default!;
+        public int PricePerDay { get; set; }
     }
 }

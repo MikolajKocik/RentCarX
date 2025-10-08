@@ -12,16 +12,19 @@ namespace RentCarX.Presentation.Controllers
         private readonly ILogger<StripeWebhookController> _logger;
         private readonly IConfiguration _configuration;
         private readonly IStripeWebhookHandler _stripeWebhookHandler;
+        private readonly IPaymentService _paymentService;
 
         public StripeWebhookController(
             ILogger<StripeWebhookController> logger,
             IConfiguration configuration,
-            IStripeWebhookHandler stripeWebhookHandler
+            IStripeWebhookHandler stripeWebhookHandler,
+            IPaymentService paymentService
             )
         {
             _logger = logger;
             _configuration = configuration;
             _stripeWebhookHandler = stripeWebhookHandler;
+            _paymentService = paymentService;
         }
 
         [HttpPost("webhook")]
@@ -53,7 +56,10 @@ namespace RentCarX.Presentation.Controllers
                 var reservationId = session?.Metadata["reservationId"];
                 _logger.LogInformation($"Payment completed for Reservation ID: {reservationId}");
 
-                // TODO: oznaczyć rezerwację jako opłaconą w DB
+                if (session != null)
+                {
+                    await _paymentService.HandleCheckoutSessionCompletedAsync(session.Id);
+                }
             }
 
             await _stripeWebhookHandler.HandleEventAsync(stripeEvent, cancellationToken);
