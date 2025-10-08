@@ -8,4 +8,6 @@
 *.csproj.user
 .vs/
 
+*apsettings.Production.json
+*apsettings.Development.json
 *.log
