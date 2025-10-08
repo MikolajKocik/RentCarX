@@ -1,8 +1,8 @@
 ﻿namespace RentCarX.Application.DTOs.Auth
 {
-    public class LoginDto
+    public sealed record LoginDto
     {
-        public string Email { get; set; } = default!;
-        public string Password { get; set; } = default!;
+        public required string Email { get; init; } 
+        public required string Password { get; init; } 
     }
 }

@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace RentCarX.Application.DTOs.Auth
 {
-    public class ForgotPasswordResponseDto
+    public sealed record ForgotPasswordResponseDto
     {
-        public string ResetLink { get; set; } 
+        public required string ResetLink { get; init; } 
     }
 }
