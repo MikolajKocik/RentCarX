@@ -10,6 +10,7 @@
         public DateTime EndDate { get; set; }
 
         public decimal TotalCost { get; set; }
+        public bool IsPaid { get; set; }
 
         public Car Car { get; set; } = default!;
 
