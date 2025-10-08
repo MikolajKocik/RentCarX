@@ -11,3 +11,5 @@
 *apsettings.Production.json
 *apsettings.Development.json
 *.log
+/RentCarX/appsettings.Production.json
+/RentCarX/appsettings.Development.json
