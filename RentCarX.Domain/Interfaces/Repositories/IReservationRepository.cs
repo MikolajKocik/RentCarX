@@ -14,5 +14,7 @@ namespace RentCarX.Domain.Interfaces.Repositories
         Task<Reservation?> GetReservationByIdAsync(Guid id, CancellationToken cancellation);
 
         Task<bool> HasOverlappingReservationAsync(Guid carId, DateTime startDate, DateTime endDate, CancellationToken cancellation);
+
+        Task UpdateAsync(Reservation reservation, CancellationToken cancellationToken);
     }
 }

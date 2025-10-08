@@ -16,7 +16,7 @@ Console.WriteLine($"Is Development: {builder.Environment.IsDevelopment()}");
 // modu³y rozszerzajace program.cs
 
 builder.Services.AddApplication(builder.Configuration);
-builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddInfrastructure(builder.Configuration, builder.Environment);
 builder.AddPresentation();
 
 // -------------------------------
