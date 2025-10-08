@@ -2,13 +2,13 @@
 
 namespace RentCarX.Application.DTOs.Stripe
 {
-    public sealed record CreateCheckoutSessionRequest
+    public sealed class CreateCheckoutSessionRequest
     {
-        public Guid CarId { get; init; }
-        public DateTime StartDate { get; init; }
-        public DateTime EndDate { get; init; }
-        public Guid UserId { get; init; }
-        public decimal TotalCost { get; init; }
-        public Guid ReservationId { get; init; }
+        public Guid ReservationId { get; set; }
+        public Guid UserId { get; set; }
+        public decimal Amount { get; set; }
+        public string Currency { get; set; } = "usd";
+        public string SuccessUrl { get; set; } = string.Empty;
+        public string CancelUrl { get; set; } = string.Empty;
     }
 }
