@@ -5,7 +5,7 @@ using RentCarX.Infrastructure.Data;
 
 namespace RentCarX.Infrastructure.Repositories;
 
-public class CarRepository : ICarRepository
+public sealed class CarRepository : ICarRepository
 {
     private readonly RentCarX_DbContext _context;
 

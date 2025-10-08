@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 using RentCarX.Domain.Models; 
@@ -8,7 +7,7 @@ using RentCarX.Infrastructure.Data;
 
 namespace RentCarX.Infrastructure.Repositories;
 
-public class ReservationRepository : IReservationRepository
+public sealed class ReservationRepository : IReservationRepository
 {
     private readonly RentCarX_DbContext _context;
     private readonly ILogger<ReservationRepository> _logger;
@@ -41,6 +40,7 @@ public class ReservationRepository : IReservationRepository
 
         return await _context.Reservations
             .Include(r => r.Car)
+            .Include(r => r.UserId)
             .FirstOrDefaultAsync(r => r.Id == id, cancellation);
     }
     
@@ -51,5 +51,11 @@ public class ReservationRepository : IReservationRepository
                 r.EndDate >= startDate && 
                 r.StartDate <= endDate, 
                 cancellationToken);
+    }
+
+    public async Task UpdateAsync(Reservation reservation, CancellationToken cancellationToken)
+    {
+        _context.Reservations.Update(reservation);
+        await _context.SaveChangesAsync(cancellationToken);
     }
 }

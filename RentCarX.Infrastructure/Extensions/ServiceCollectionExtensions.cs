@@ -10,9 +10,7 @@ using RentCarX.Domain.Interfaces.Repositories;
 using RentCarX.Domain.Interfaces.Services.Stripe;
 using RentCarX.Domain.Interfaces.UserContext;
 using RentCarX.Infrastructure.Data;
-using RentCarX.Infrastructure.Helpers;
 using RentCarX.Infrastructure.Repositories;
-using RentCarX.Infrastructure.Services;
 using RentCarX.Infrastructure.Services.JWT;
 using RentCarX.Infrastructure.Services.Stripe;
 using RentCarX.Infrastructure.Settings;
@@ -37,8 +35,6 @@ namespace RentCarX.Infrastructure.Extensions
                 string username = database["Username"]!;
                 string password = database["Password"]!;
 
-                ConnectionStringValidation.CheckParameters(server, databaseName, username, password);
-
                 string connectionString = $"Server={server}\\SQLEXPRESS;Database={databaseName};User Id={username};Password={password};";
 
                 services.AddDbContext<RentCarX_DbContext>(options =>
@@ -61,6 +57,7 @@ namespace RentCarX.Infrastructure.Extensions
 
             services.AddScoped<ICarRepository, CarRepository>();
             services.AddScoped<IReservationRepository, ReservationRepository>();
+            services.AddScoped<IPaymentRepository, PaymentRepository>();
 
             services.AddHttpContextAccessor();
             services.AddScoped<IUserContextService, UserContextService>();
@@ -77,7 +74,7 @@ namespace RentCarX.Infrastructure.Extensions
 
             services.AddSingleton(new ProductService()); 
             services.AddSingleton(new PriceService()); 
-            services.AddSingleton(new SessionService()); // check
+            services.AddSingleton(new SessionService()); 
         }
     }
 }

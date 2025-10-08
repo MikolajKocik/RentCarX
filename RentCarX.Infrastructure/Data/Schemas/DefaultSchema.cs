@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace RentCarX.Infrastructure.Data.Schemas
 {
-    public static class DefaultSchema
+    internal static class DefaultSchema
     {
         public static string RentCarXDefault = "RentCarX";
     }

@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace RentCarX.Infrastructure.Helpers
 {
-    public static class ConnectionStringValidation
+    internal static class ConnectionStringValidation
     {
-        public static void CheckParameters(params string[] databaseParameters)
+        internal static void CheckParameters(params string[] databaseParameters)
         {
             foreach (string parameter in databaseParameters)
             {

@@ -19,12 +19,18 @@ namespace RentCarX.Infrastructure.Data
 
             var optionsBuilder = new DbContextOptionsBuilder<RentCarX_DbContext>();
 
-            var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING")
-                                   ?? configuration.GetConnectionString("DefaultConnection"); 
+            var database = configuration.GetSection("Database");
+            string server = database["Server"]!;
+            string databaseName = database["DatabaseName"]!;
+            string username = database["Username"]!;
+            string password = database["Password"]!;
+
+            string connectionString = $"Server={server}\\SQLEXPRESS;Database={databaseName};User Id={username};Password={password};";
+
 
             if (string.IsNullOrEmpty(connectionString))
             {
-                throw new InvalidOperationException("Connection string 'DB_CONNECTION_STRING' environment variable or 'DefaultConnection' in appsettings.json is not set.");
+                throw new InvalidOperationException("Connection string is not set.");
             }
 
             optionsBuilder.UseSqlServer(connectionString);

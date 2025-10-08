@@ -7,14 +7,14 @@ using RentCarX.Infrastructure.Data.Schemas;
 
 namespace RentCarX.Infrastructure.Data
 {
-    public class RentCarX_DbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid> 
+    public sealed class RentCarX_DbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid> 
     {
-        public DbSet<Car> Cars { get; set; }
-        public DbSet<Reservation> Reservations { get; set; }
-        public DbSet<Item> Items { get; set; }
-        public DbSet<Payment> Payments { get; set; }
-        public DbSet<Refund> Refunds { get; set; }
-        public DbSet<StripeCustomer> StripeCustomers { get; set; }
+        internal DbSet<Car> Cars { get; set; }
+        internal DbSet<Reservation> Reservations { get; set; }
+        internal DbSet<Item> Items { get; set; }
+        internal DbSet<Payment> Payments { get; set; }
+        internal DbSet<Refund> Refunds { get; set; }
+        internal DbSet<StripeCustomer> StripeCustomers { get; set; }
         public override DbSet<User> Users { get; set; }
 
         public RentCarX_DbContext(DbContextOptions<RentCarX_DbContext> options)
@@ -29,8 +29,11 @@ namespace RentCarX.Infrastructure.Data
             modelBuilder.Entity<IdentityUserLogin<string>>()
                     .HasKey(login => new { login.LoginProvider, login.ProviderKey });
 
-            // assembly reference to all configurations classes in solution
+            modelBuilder.Entity<Payment>()
+                .Property(p => p.Status)
+                .HasConversion<string>();
 
+            // assembly reference to all configurations classes in solution
             modelBuilder.ApplyConfigurationsFromAssembly(this.GetType().Assembly);
         }
     }
