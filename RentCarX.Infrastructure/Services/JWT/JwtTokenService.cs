@@ -21,6 +21,9 @@ namespace RentCarX.Infrastructure.Services.JWT
 
         public async Task<string> GenerateToken(User user)
         {
+            if (user.Email is null || user.UserName is null)
+                throw new ArgumentNullException(nameof(user), "User cannot be null when generating JWT.");
+
             var claims = new List<Claim> 
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()), 
