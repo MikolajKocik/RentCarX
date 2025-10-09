@@ -26,7 +26,7 @@ namespace RentCarX.Application.CQRS.Commands.Auth.ForgotPassword
         public async Task<ForgotPasswordResponseDto> Handle(ForgotPasswordCommand request, CancellationToken cancellationToken)
         {
             var user = await _userManager.FindByEmailAsync(request.Email);
-            if (user == null)
+            if (user?.Email is null)
             {
                 _logger.LogInformation("Password reset requested for non-existent email: {Email}", request.Email);
                 return new ForgotPasswordResponseDto { ResetLink = "If a user with that email exists, a password reset link has been sent." };
