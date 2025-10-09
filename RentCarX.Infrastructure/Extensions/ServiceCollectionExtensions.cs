@@ -35,7 +35,7 @@ namespace RentCarX.Infrastructure.Extensions
                 string username = database["Username"]!;
                 string password = database["Password"]!;
 
-                string connectionString = $"Server={server}\\SQLEXPRESS;Database={databaseName};User Id={username};Password={password};";
+                string connectionString = $"Server={server}\\SQLEXPRESS;Database={databaseName};User Id={username};Password={password};TrustServerCertificate=True;";
 
                 services.AddDbContext<RentCarX_DbContext>(options =>
                   options

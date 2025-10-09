@@ -8,6 +8,6 @@ public sealed class User : IdentityUser<Guid>
 
     public User() : base() { }
 
-    public StripeCustomer? StripeCustromer { get; set; }
+    public StripeCustomer? StripeCustomer { get; set; }
     public ICollection<Payment>? Payments { get; set; }
 }

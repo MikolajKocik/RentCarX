@@ -66,7 +66,7 @@ namespace RentCarX.Presentation.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<ForgotPasswordResponseDto>> ForgotPassword([FromBody] string email)
         {
-            var command = new ForgotPasswordCommand { Email = email };
+            var command = new ForgotPasswordCommand(email);
             var result = await _mediator.Send(command);
 
             return Ok(result);
