@@ -22,9 +22,9 @@ namespace RentCarX.Infrastructure.Configurations
                    .HasForeignKey(r => r.UserId)
                    .OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasOne(u => u.StripeCustromer)
+            builder.HasOne(u => u.StripeCustomer)
                 .WithOne(c => c.User)
-                .HasForeignKey<StripeCustomer>(c => c.Id);
+                .HasForeignKey<StripeCustomer>(c => c.UserId);
 
             builder.HasMany(u => u.Payments)
                 .WithOne(p => p.User)

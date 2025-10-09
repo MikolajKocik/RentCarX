@@ -1,17 +1,18 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using RentCarX.Domain.Models.Stripe;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace RentCarX.Infrastructure.Configurations
 {
-    public sealed class PaymentConfiguration : IEntityTypeConfiguration<Payment>
+    public sealed class RefundConfiguration : IEntityTypeConfiguration<Refund>
     {
-        public void Configure(EntityTypeBuilder<Payment> builder)
+        public void Configure(EntityTypeBuilder<Refund> builder)
         {
-            builder.HasOne(i => i.Item)
-                .WithMany()
-                .HasForeignKey(p => p.ItemId);
-
             builder.Property(p => p.Amount)
                 .HasPrecision(12, 2);
         }
