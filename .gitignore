@@ -13,3 +13,6 @@
 *.log
 /RentCarX/appsettings.Production.json
 /RentCarX/appsettings.Development.json
+
+# SSL certificate and private key for local docker database
+/db-certs/
