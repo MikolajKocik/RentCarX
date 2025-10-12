@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Asp.Versioning;
+using Microsoft.AspNetCore.Mvc;
 using RentCarX.Domain.Interfaces.Services.Stripe;
 using Stripe;
 using Stripe.Checkout;
@@ -6,7 +7,8 @@ using Stripe.Checkout;
 namespace RentCarX.Presentation.Controllers
 {
     [ApiController]
-    [Route("api/stripe")]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/stripe")]
     public class StripeWebhookController : ControllerBase
     {
         private readonly ILogger<StripeWebhookController> _logger;

@@ -10,6 +10,8 @@ using FluentValidation.AspNetCore;
 using RentCarX.Application.Services.EmailService;
 using RentCarX.Application.MappingsProfile;
 using RentCarX.Application.Interfaces.Services.EmailService;
+using Asp.Versioning.ApiExplorer;
+using Microsoft.FeatureManagement;
 
 namespace RentCarX.Presentation.Extensions
 {
@@ -18,14 +20,24 @@ namespace RentCarX.Presentation.Extensions
         public static void AddPresentation(this WebApplicationBuilder builder)
         {
             // SMTP
-
             builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
             builder.Services.AddTransient<IEmailService, EmailService>();
 
             // swagger configuration
-
             builder.Services.AddSwaggerGen(c =>
             {
+                var apiVersionDescriptionProvider = builder.Services.BuildServiceProvider()
+                    .GetRequiredService<IApiVersionDescriptionProvider>();
+
+                foreach (var description in apiVersionDescriptionProvider.ApiVersionDescriptions)
+                {
+                    c.SwaggerDoc(description.GroupName, new OpenApiInfo
+                    {
+                        Title = $"Api version: {description.ApiVersion}",
+                        Version = description.ApiVersion.ToString()
+                    });
+                }
+
                 c.AddSecurityDefinition("bearerAuth", new OpenApiSecurityScheme
                 {
                     Type = SecuritySchemeType.Http,
@@ -52,28 +64,10 @@ namespace RentCarX.Presentation.Extensions
             });
 
             // JWT authentication configuration
-
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
                 {
                     var config = builder.Configuration;
-
-                    Console.WriteLine("\n--- DEBUG: Configuration JWT Validation ---");
-                    Console.WriteLine($"DEBUG: Config Jwt:Key (raw): {config["Jwt:Key"]}");
-                    Console.WriteLine($"DEBUG: Config Jwt:Issuer: {config["Jwt:Issuer"]}");
-                    Console.WriteLine($"DEBUG: Config Jwt:Audience: {config["Jwt:Audience"]}");
-
-                    try
-                    {
-                        var keyBytes = Encoding.UTF8.GetBytes(config["Jwt:Key"]!);
-                        Console.WriteLine($"DEBUG: Config Jwt:Key (Base64 from config): {Convert.ToBase64String(keyBytes)}");
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"DEBUG: Bad JWT key conversion on bytes/Base64: {ex.Message}");
-                    }
-
-                    Console.WriteLine("----------------------------------------");
 
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
@@ -86,30 +80,14 @@ namespace RentCarX.Presentation.Extensions
                         ValidateLifetime = true,
                         ClockSkew = TimeSpan.Zero,
                     };
-
-                    Console.WriteLine("\n--- DEBUG: Final TokenValidationParameters ---");
-                    Console.WriteLine($"DEBUG: ValidIssuer: {options.TokenValidationParameters.ValidIssuer}");
-                    Console.WriteLine($"DEBUG: ValidAudience: {options.TokenValidationParameters.ValidAudience}");
-
-
-                    if (options.TokenValidationParameters.IssuerSigningKey is SymmetricSecurityKey symmetricKey)
-                    {
-                        Console.WriteLine($"DEBUG: IssuerSigningKey (Base64 from SymmetricSecurityKey object): {Convert.ToBase64String(symmetricKey.Key)}");
-                    }
-                    else
-                    {
-                        Console.WriteLine("DEBUG: IssuerSigningKey is not type of SymmetricSecurityKey.");
-                    }
-                    Console.WriteLine($"DEBUG: ValidateLifetime: {options.TokenValidationParameters.ValidateLifetime}");
-                    Console.WriteLine($"DEBUG: ClockSkew: {options.TokenValidationParameters.ClockSkew}");
-                    Console.WriteLine($"DEBUG: RoleClaimType (Default): {options.TokenValidationParameters.RoleClaimType}"); // Oczekiwany rezultat default ClaimTypes.Role
-                    Console.WriteLine("--------------------------------------------");
                 });
 
             builder.Services.AddControllers();
 
-            // Middleware configuration
+            // Feature flags management
+            builder.Services.AddFeatureManagement();
 
+            // Middleware configuration
             builder.Services.AddAuthorization();
 
             // AutoMapper configuration
@@ -127,10 +105,10 @@ namespace RentCarX.Presentation.Extensions
                 .AddFluentValidationAutoValidation();
 
             builder.Services.AddMediatR(cfg =>
-            {
-                cfg.RegisterServicesFromAssembly(typeof(AssemblyMarker).Assembly);
-                cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(RequestValidationBehavior<,>));
-            });
+                {
+                    cfg.RegisterServicesFromAssembly(typeof(AssemblyMarker).Assembly);
+                    cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(RequestValidationBehavior<,>));
+                });
 
             var stripeApiKey = builder.Configuration.GetValue<string>("STRIPE_API_KEY");
 

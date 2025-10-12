@@ -1,4 +1,5 @@
-﻿using MediatR;
+﻿using Asp.Versioning;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RentCarX.Application.CQRS.Commands.Auth.ConfirmEmail;
@@ -10,7 +11,8 @@ using RentCarX.Application.DTOs.Auth;
 
 namespace RentCarX.Presentation.Controllers
 {
-    [Route("api/auth")]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/auth")]
     [AllowAnonymous]
     [ApiController]
     public class AuthController : ControllerBase

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Asp.Versioning;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RentCarX.Infrastructure.Services.Stripe;
 
@@ -6,7 +7,8 @@ namespace RentCarX.Presentation.Controllers
 {
     [Authorize(Roles = "Admin")]
     [ApiController]
-    [Route("api/stripe")]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/admin/stripe")]
     public class StripeAdminController : ControllerBase
     {
         private readonly StripeProductService _stripeProductService;
@@ -23,5 +25,4 @@ namespace RentCarX.Presentation.Controllers
             return Ok(new { message = "Stripe products synchronized successfully." });
         }
     }
-
 }

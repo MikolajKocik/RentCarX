@@ -1,4 +1,5 @@
-﻿using MediatR;
+﻿using Asp.Versioning;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RentCarX.Application.CQRS.Commands.Reservation.CreateReservation;
@@ -8,7 +9,8 @@ using RentCarX.Application.CQRS.Queries.Reservation.GetAll;
 namespace RentCarX.Presentation.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/reservations")]
     [Authorize]
     public class ReservationController : ControllerBase
     {
