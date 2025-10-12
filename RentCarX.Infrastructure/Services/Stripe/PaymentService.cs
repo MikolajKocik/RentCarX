@@ -106,6 +106,7 @@ namespace RentCarX.Infrastructure.Services.Stripe
 
         public async Task HandleRefundSucceededAsync(string refundId, CancellationToken ct = default)
         {
+            // TODO 
             // Pobierz Payment po refund (repo musi posiadać metodę GetByRefundIdAsync albo przez join)
             // Ustaw payment.Status = PaymentStatus.Refunded; payment.RefundedAt = DateTime.UtcNow;
             // Zapisz.
