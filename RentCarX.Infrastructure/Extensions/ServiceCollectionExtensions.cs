@@ -10,6 +10,7 @@ using RentCarX.Domain.Interfaces.Repositories;
 using RentCarX.Domain.Interfaces.Services.Stripe;
 using RentCarX.Domain.Interfaces.UserContext;
 using RentCarX.Infrastructure.Data;
+using RentCarX.Infrastructure.Helpers;
 using RentCarX.Infrastructure.Repositories;
 using RentCarX.Infrastructure.Services.JWT;
 using RentCarX.Infrastructure.Services.Stripe;
@@ -34,8 +35,11 @@ namespace RentCarX.Infrastructure.Extensions
                 string databaseName = database["DatabaseName"]!;
                 string username = database["Username"]!;
                 string password = database["Password"]!;
+                string port = database["Port"]!;
 
-                string connectionString = $"Server={server}\\SQLEXPRESS;Database={databaseName};User Id={username};Password={password};TrustServerCertificate=True;";
+                ConnectionStringValidation.CheckParameters(server, databaseName, username, password, port);
+
+                string connectionString = $"Server={server},{port};Database={databaseName};User Id={username};Password={password};Encrypt=True;TrustServerCertificate=True;";
 
                 services.AddDbContext<RentCarX_DbContext>(options =>
                   options

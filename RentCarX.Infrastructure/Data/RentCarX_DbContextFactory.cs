@@ -24,8 +24,9 @@ namespace RentCarX.Infrastructure.Data
             string databaseName = database["DatabaseName"]!;
             string username = database["Username"]!;
             string password = database["Password"]!;
+            string port = database["Port"]!;
 
-            string connectionString = $"Server={server}\\SQLEXPRESS;Database={databaseName};User Id={username};Password={password};";
+            string connectionString = $"Server={server},{port};Database={databaseName};User Id={username};Password={password};Encrypt=True;TrustServerCertificate=True;";
 
 
             if (string.IsNullOrEmpty(connectionString))
