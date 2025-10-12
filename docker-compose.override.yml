@@ -1,0 +1,47 @@
+services:
+  rentcarx:
+    image: rentcarx:latest 
+    build:
+      context: .
+      dockerfile: RentCarX/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - Database__Password=${SA_PASSWORD}
+    networks: 
+      - rentcarx-dev
+    ports: 
+      - "8080:8080"
+    volumes:
+      - ./RentCarX/appsettings.Development.json:/app/appsettings.Development.json:ro
+    depends_on:
+       sqlserver:
+          condition: service_healthy
+     
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    networks: 
+      - rentcarx-dev
+    ports:
+      - "1433:1433"
+    user: "0:0"
+    environment:
+      SA_PASSWORD: ${SA_PASSWORD}
+      ACCEPT_EULA: "Y"
+      MSSQL_TLS_CERT: "/var/opt/mssql/certs/server.crt"
+      MSSQL_TLS_KEY: "/var/opt/mssql/certs/server.key"
+      MSSQL_TLS_MIN_PROTOCOL_VERSION: "1.2"
+    volumes:
+      - sqlserver_data:/var/opt/mssql/data
+      # SSL cert + key
+      - ./db-certs/server.crt:/var/opt/mssql/certs/server.crt:ro
+      - ./db-certs/server.key:/var/opt/mssql/certs/server.key:ro
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P $${SA_PASSWORD} -Q \"SELECT 1\" > /dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+
+  

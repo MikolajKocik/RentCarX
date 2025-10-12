@@ -14,5 +14,7 @@
 /RentCarX/appsettings.Production.json
 /RentCarX/appsettings.Development.json
 
+.env
+
 # SSL certificate and private key for local docker database
 /db-certs/
