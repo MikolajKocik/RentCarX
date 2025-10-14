@@ -31,7 +31,7 @@ namespace RentCarX.Application.CQRS.Commands.Reservation.CreateReservation
             var days = (request.EndDate - request.StartDate).Days;
             var totalCost = days * car.PricePerDay;
 
-            var reservation = new RentCarX.Domain.Models.Reservation
+            var reservation = new Domain.Models.Reservation
             {
                 Id = Guid.NewGuid(),
                 CarId = car.Id,
@@ -41,7 +41,9 @@ namespace RentCarX.Application.CQRS.Commands.Reservation.CreateReservation
                 TotalCost = totalCost
             };
 
-            await _reservationRepository.Create(reservation, cancellationToken); 
+            await _reservationRepository.Create(reservation, cancellationToken);
+
+            car.IsAvailable = false;
 
             return reservation.Id;
         }
