@@ -18,31 +18,42 @@ public sealed class ReservationRepository : IReservationRepository
         _logger = logger;
     }
 
-    public async Task Create(Reservation reservation, CancellationToken cancellation)
+    public async Task Create(Reservation reservation, CancellationToken cancellationToken)
     {
         _context.Reservations.Add(reservation);
-        await _context.SaveChangesAsync(cancellation);
+        await _context.SaveChangesAsync(cancellationToken);
     }
 
-    
-    public async Task<ICollection<Reservation>> GetUserReservations(Guid userId, CancellationToken cancellation)
-        => await _context.Reservations
-               .Where(r => r.UserId == userId) 
+    public IQueryable<Reservation> GetDeletedReservations(Guid id)
+        =>  _context.Reservations
+            .Where(r => r.Id == id && r.IsDeleted)
+            .Include(r => r.Car)
+            .AsNoTracking()
+            .AsQueryable();
+
+
+    public IQueryable<Reservation> GetAll()
+        => _context.Reservations
+               .IgnoreQueryFilters()
                .Include(r => r.Car)
-               .ToListAsync(cancellation);
+               .AsNoTracking()
+               .AsQueryable();
 
-    public async Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellation)
-        => await _context.Database.BeginTransactionAsync(cancellation);
+    public async Task<IEnumerable<Reservation>> GetUserReservationsAsync(Guid userId, CancellationToken cancellationToken)
+        => await _context.Reservations
+            .Where(r => r.UserId == userId)
+            .Include(r => r.Car)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
 
-    public async Task<Reservation?> GetReservationByIdAsync(Guid id, CancellationToken cancellation)
-    {
-        _logger.LogInformation($"Executing SQL query for ReservationId: {id}"); 
+    public async Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken)
+        => await _context.Database.BeginTransactionAsync(cancellationToken);
 
-        return await _context.Reservations
+    public async Task<Reservation?> GetReservationByIdAsync(Guid id, CancellationToken cancellationToken)
+        => await _context.Reservations
             .Include(r => r.Car)
             .Include(r => r.UserId)
-            .FirstOrDefaultAsync(r => r.Id == id, cancellation);
-    }
+            .FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
     
     public async Task<bool> HasOverlappingReservationAsync(Guid carId, DateTime startDate, DateTime endDate, CancellationToken cancellationToken)
     {
@@ -58,4 +69,15 @@ public sealed class ReservationRepository : IReservationRepository
         _context.Reservations.Update(reservation);
         await _context.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken)
+    {
+        Reservation? reservation = await _context.Reservations.FindAsync(id, cancellationToken);
+
+        _context.Reservations.Remove(reservation!);
+        await _context.SaveChangesAsync(cancellationToken);   
+    }
+
+    public async Task SaveToDatabase(CancellationToken cancellationToken)
+        => await _context.SaveChangesAsync(cancellationToken);
 }

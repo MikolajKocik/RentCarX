@@ -11,6 +11,7 @@
 
         public decimal TotalCost { get; set; }
         public bool IsPaid { get; set; }
+        public bool IsDeleted { get; set; }
 
         public Car Car { get; set; } = default!;
 
