@@ -3,8 +3,12 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RentCarX.Application.CQRS.Commands.Reservation.CreateReservation;
+using RentCarX.Application.CQRS.Commands.Reservation.DeleteReservation;
 using RentCarX.Application.CQRS.Commands.Reservation.InitiatePayment;
 using RentCarX.Application.CQRS.Queries.Reservation.GetAll;
+using RentCarX.Application.CQRS.Queries.Reservation.GetById;
+using RentCarX.Application.CQRS.Queries.Reservation.GetMy;
+using RentCarX.Application.DTOs.Reservation;
 
 namespace RentCarX.Presentation.Controllers
 {
@@ -12,7 +16,9 @@ namespace RentCarX.Presentation.Controllers
     [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/reservations")]
     [Authorize]
-    public class ReservationController : ControllerBase
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public sealed class ReservationController : ControllerBase
     {
         private readonly IMediator _mediator;
 
@@ -26,45 +32,67 @@ namespace RentCarX.Presentation.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)] 
         [ProducesResponseType(StatusCodes.Status404NotFound)] 
         [ProducesResponseType(StatusCodes.Status409Conflict)] 
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)] 
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)] 
-        public async Task<IActionResult> Create([FromBody] CreateReservationCommand command, CancellationToken cancellationToken)
+        public async Task<IActionResult> CreateReservation([FromBody] CreateReservationCommand command, CancellationToken cancellationToken)
         {
             var id = await _mediator.Send(command, cancellationToken);
-            return CreatedAtAction(nameof(GetMy), new { }, id);
+            return CreatedAtAction(nameof(GetById), new { }, id);
         }
 
-        [HttpGet("my")]
+        [HttpGet("my-reservations")]
         [ProducesResponseType(StatusCodes.Status200OK)] 
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)] 
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> GetMy(CancellationToken cancellationToken)
+        public async Task<ActionResult<List<ReservationDto>>> GetMyReservations(CancellationToken cancellationToken)
         {
-            var reservations = await _mediator.Send(new GetAllReservationsQuery(), cancellationToken);
+            IEnumerable<ReservationDto> reservations = await _mediator.Send(new GetMyReservationsQuery(), cancellationToken);
             return Ok(reservations);
+        }
+
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [HttpGet("{id:guid}")]
+        public async Task<ActionResult<ReservationDto>> GetById(Guid id, CancellationToken cancellationToken)
+        {
+            ReservationDto reservation = await _mediator.Send(new GetReservationByIdQuery(id), cancellationToken);
+            return Ok(reservation);
         }
 
         [Authorize(Roles = "Admin")]
         [HttpGet("all")]
         [ProducesResponseType(StatusCodes.Status200OK)] 
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)] 
         [ProducesResponseType(StatusCodes.Status403Forbidden)] 
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
+        public async Task<ActionResult<List<ReservationDto>>> GetAll(CancellationToken cancellationToken)
         {
-            var result = await _mediator.Send(new GetAllReservationsQuery(), cancellationToken);
+            List<ReservationDto> result = await _mediator.Send(new GetAllReservationsQuery(), cancellationToken);
             return Ok(result);
+        }
+
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [HttpDelete("{id:guid}/delete/soft")] // soft-delete approach
+        public async Task<IActionResult> SoftDeleteReservation(Guid id, CancellationToken cancellationToken)
+        {
+            var delete = await _mediator.Send(new SoftDeleteReservationCommand(id), cancellationToken);
+            return NoContent();
+
+        }
+
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [HttpDelete("{id:guid}/delete")] 
+        public async Task<IActionResult> DeleteReservation(Guid id, CancellationToken cancellationToken)    
+        {
+            var delete = await _mediator.Send(new SoftDeleteReservationCommand(id), cancellationToken);
+            return NoContent();
         }
 
         [HttpPost("{id:guid}/pay")]
         [ProducesResponseType(StatusCodes.Status200OK)] 
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)] 
         [ProducesResponseType(StatusCodes.Status400BadRequest)] 
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> InitiatePayment(Guid id, CancellationToken cancellationToken)
         {
-            var checkoutUrl = await _mediator.Send(new InitiatePaymentCommand(id), cancellationToken);
+            string checkoutUrl = await _mediator.Send(new InitiatePaymentCommand(id), cancellationToken);
 
             return Ok(new { checkoutUrl }); 
         }

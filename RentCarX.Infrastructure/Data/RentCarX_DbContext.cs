@@ -33,6 +33,10 @@ namespace RentCarX.Infrastructure.Data
                 .Property(p => p.Status)
                 .HasConversion<string>();
 
+            // query filter for soft deleted reservations
+            modelBuilder.Entity<Reservation>()
+                .HasQueryFilter(f => !f.IsDeleted);
+
             // assembly reference to all configurations classes in solution
             modelBuilder.ApplyConfigurationsFromAssembly(this.GetType().Assembly);
         }
