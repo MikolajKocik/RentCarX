@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
+using RentCarX.Infrastructure.Helpers;
 
 namespace RentCarX.Infrastructure.Data 
 {
@@ -19,20 +20,7 @@ namespace RentCarX.Infrastructure.Data
 
             var optionsBuilder = new DbContextOptionsBuilder<RentCarX_DbContext>();
 
-            var database = configuration.GetSection("Database");
-            string server = database["Server"]!;
-            string databaseName = database["DatabaseName"]!;
-            string username = database["Username"]!;
-            string password = database["Password"]!;
-            string port = database["Port"]!;
-
-            string connectionString = $"Server={server},{port};Database={databaseName};User Id={username};Password={password};Encrypt=True;TrustServerCertificate=True;";
-
-
-            if (string.IsNullOrEmpty(connectionString))
-            {
-                throw new InvalidOperationException("Connection string is not set.");
-            }
+            string connectionString = ConnectionString.GetConnectionString(configuration);
 
             optionsBuilder.UseSqlServer(connectionString);
 

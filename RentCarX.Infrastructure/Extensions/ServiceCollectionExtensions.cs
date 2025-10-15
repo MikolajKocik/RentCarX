@@ -25,21 +25,12 @@ namespace RentCarX.Infrastructure.Extensions
         public static void AddInfrastructure(
             this IServiceCollection services,
             IConfiguration configuration,
-            IWebHostEnvironment environment
+            IHostEnvironment environment
             )
         {
             if(environment.IsDevelopment())
             {
-                var database = configuration.GetSection("Database");
-                string server = database["Server"]!;
-                string databaseName = database["DatabaseName"]!;
-                string username = database["Username"]!;
-                string password = database["Password"]!;
-                string port = database["Port"]!;
-
-                ConnectionStringValidation.CheckParameters(server, databaseName, username, password, port);
-
-                string connectionString = $"Server={server},{port};Database={databaseName};User Id={username};Password={password};Encrypt=True;TrustServerCertificate=True;";
+                string connectionString = ConnectionString.GetConnectionString(configuration);
 
                 services.AddDbContext<RentCarX_DbContext>(options =>
                   options

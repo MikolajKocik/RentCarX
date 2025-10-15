@@ -17,5 +17,10 @@ services:
     networks: 
       - rentcarx-dev
 
+  rentcarx-hangfire:
+    build: ./RentCarX.HangfireWorker
+    depends_on:
+      - sqlserver
+
 
   

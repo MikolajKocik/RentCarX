@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
-using RentCarX.Domain.Models; 
+using RentCarX.Domain.Models;
 using RentCarX.Domain.Interfaces.Repositories;
 using RentCarX.Infrastructure.Data;
 
@@ -25,13 +25,11 @@ public sealed class ReservationRepository : IReservationRepository
     }
 
     public IQueryable<Reservation> GetDeletedReservations(Guid id)
-        =>  _context.Reservations
+        => _context.Reservations
             .Where(r => r.Id == id && r.IsDeleted)
             .Include(r => r.Car)
             .AsNoTracking()
             .AsQueryable();
-
-
     public IQueryable<Reservation> GetAll()
         => _context.Reservations
                .IgnoreQueryFilters()
@@ -46,6 +44,13 @@ public sealed class ReservationRepository : IReservationRepository
             .AsNoTracking()
             .ToListAsync(cancellationToken);
 
+    public async Task<List<Guid>> GetCarIdsWithActiveReservationAsync(DateTime currentTime, CancellationToken cancellationToken)
+        => await _context.Reservations
+             .Where(r => r.EndDate >= currentTime && r.StartDate <= currentTime)
+             .Select(r => r.CarId)
+             .Distinct()
+             .ToListAsync(cancellationToken);
+
     public async Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken)
         => await _context.Database.BeginTransactionAsync(cancellationToken);
 
@@ -54,13 +59,13 @@ public sealed class ReservationRepository : IReservationRepository
             .Include(r => r.Car)
             .Include(r => r.UserId)
             .FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
-    
+
     public async Task<bool> HasOverlappingReservationAsync(Guid carId, DateTime startDate, DateTime endDate, CancellationToken cancellationToken)
     {
         return await _context.Reservations.AnyAsync(r =>
                 r.CarId == carId &&
-                r.EndDate >= startDate && 
-                r.StartDate <= endDate, 
+                r.EndDate >= startDate &&
+                r.StartDate <= endDate,
                 cancellationToken);
     }
 
@@ -75,7 +80,7 @@ public sealed class ReservationRepository : IReservationRepository
         Reservation? reservation = await _context.Reservations.FindAsync(id, cancellationToken);
 
         _context.Reservations.Remove(reservation!);
-        await _context.SaveChangesAsync(cancellationToken);   
+        await _context.SaveChangesAsync(cancellationToken);
     }
 
     public async Task SaveToDatabase(CancellationToken cancellationToken)

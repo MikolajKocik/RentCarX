@@ -17,6 +17,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Elementy rozwiązania", "El
 		.env.template = .env.template
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RentCarX.HangfireWorker", "RentCarX.HangfireWorker\RentCarX.HangfireWorker.csproj", "{B918EC02-6ECC-59FA-CF05-1C2444C2EA88}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{6A9349BF-AA41-4AF6-BD2A-501076235D40}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6A9349BF-AA41-4AF6-BD2A-501076235D40}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6A9349BF-AA41-4AF6-BD2A-501076235D40}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B918EC02-6ECC-59FA-CF05-1C2444C2EA88}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B918EC02-6ECC-59FA-CF05-1C2444C2EA88}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B918EC02-6ECC-59FA-CF05-1C2444C2EA88}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B918EC02-6ECC-59FA-CF05-1C2444C2EA88}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
