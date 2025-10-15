@@ -15,6 +15,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Elementy rozwiązania", "El
 	ProjectSection(SolutionItems) = preProject
 		.env = .env
 		.env.template = .env.template
+		docker-compose.override.yml = docker-compose.override.yml
+		docker-compose.prod.yml = docker-compose.prod.yml
+		docker-compose.yml = docker-compose.yml
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RentCarX.HangfireWorker", "RentCarX.HangfireWorker\RentCarX.HangfireWorker.csproj", "{B918EC02-6ECC-59FA-CF05-1C2444C2EA88}"
