@@ -18,9 +18,8 @@ services:
       - rentcarx-dev
 
   rentcarx-hangfire:
-    build: ./RentCarX.HangfireWorker
-    depends_on:
-      - sqlserver
-
+    image: hangfire:latest
+    networks:
+      - rentcarx-dev
 
   

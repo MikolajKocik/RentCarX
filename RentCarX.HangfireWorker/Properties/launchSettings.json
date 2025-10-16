@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "RentCarX.HangfireWorker": {
+      "commandName": "Project"
+    },
+    "Container (Dockerfile)": {
+      "commandName": "Docker"
+    }
+  }
+}

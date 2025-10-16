@@ -2,8 +2,8 @@ services:
   rentcarx:
     image: rentcarx:latest 
     build:
-      context: .
-      dockerfile: RentCarX/Dockerfile
+      context: ./RentCarX
+      dockerfile: Dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - Database__Password=${SA_PASSWORD}
@@ -43,5 +43,15 @@ services:
       retries: 5
       start_period: 60s
 
+  rentcarx-hangfire:
+    build:
+      context: ./RentCarX.HangfireWorker 
+      dockerfile: ./RentCarX/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - Database__Password=${SA_PASSWORD}
+    depends_on:
+      sqlserver:
+        condition: service_healthy
 
   
