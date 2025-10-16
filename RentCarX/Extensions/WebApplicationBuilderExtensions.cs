@@ -110,11 +110,11 @@ namespace RentCarX.Presentation.Extensions
                     cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(RequestValidationBehavior<,>));
                 });
 
-            var stripeApiKey = builder.Configuration.GetValue<string>("STRIPE_API_KEY");
+            var stripeApiKey = builder.Configuration.GetSection("Stripe").GetValue<string>("SecretKey");
 
             if (string.IsNullOrEmpty(stripeApiKey))
             {
-                throw new InvalidOperationException("Stripe Secret Key environment variable 'STRIPE_API_KEY' is not set.");
+                throw new InvalidOperationException("Stripe Secret Key environment variable is not set.");
             }
         }
     }
