@@ -1,17 +1,16 @@
-﻿namespace RentCarX.Domain.Exceptions
+﻿namespace RentCarX.Domain.Exceptions;
+
+public sealed class EmailNotConfirmedException : Exception
 {
-    public class EmailNotConfirmedException : Exception
+    public string ErrorCode { get; }
+
+    public EmailNotConfirmedException(string message) : base(message)
     {
-        public string ErrorCode { get; }
+        ErrorCode = "EmailNotConfirmed"; 
+    }
 
-        public EmailNotConfirmedException(string message) : base(message)
-        {
-            ErrorCode = "EmailNotConfirmed"; 
-        }
-
-        public EmailNotConfirmedException(string message, Exception innerException) : base(message, innerException)
-        {
-            ErrorCode = "EmailNotConfirmed";
-        }
+    public EmailNotConfirmedException(string message, Exception innerException) : base(message, innerException)
+    {
+        ErrorCode = "EmailNotConfirmed";
     }
 }

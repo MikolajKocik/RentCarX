@@ -1,4 +1,5 @@
-﻿using RentCarX.Domain.Exceptions; 
+﻿using RentCarX.Domain.ExceptionModels;
+using RentCarX.Domain.Exceptions; 
 using System.Net;
 using System.Text.Json; 
 using System.Text.Json.Serialization; 
@@ -26,7 +27,7 @@ namespace RentCarX.Presentation.Middleware
             }
             catch (Exception ex) 
             {
-                _logger.LogError(ex, $"An unhandled exception occurred: {ex.Message}");
+                _logger.LogError(ex, "An unhandled exception occurred: {ex.Message}", ex.Message);
 
                 await HandleExceptionAsync(context, ex); 
             }
@@ -67,6 +68,13 @@ namespace RentCarX.Presentation.Middleware
                     title = "Email Not Confirmed"; 
                     detail = emailNotConfirmedException.Message; 
                     errorCode = emailNotConfirmedException.ErrorCode; 
+                    break;
+
+                case AlreadyDeletedException alreadyDeletedException:
+                    statusCode = HttpStatusCode.Forbidden;
+                    title = "Forbidden";
+                    detail = alreadyDeletedException.Message;
+                    errorCode = null;
                     break;
 
                 case UnauthorizedException unauthorizedException: 

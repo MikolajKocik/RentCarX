@@ -1,17 +1,16 @@
-﻿namespace RentCarX.Domain.Exceptions
+﻿namespace RentCarX.Domain.Exceptions;
+
+public sealed class ConflictException : Exception
 {
-    public class ConflictException : Exception
+    public string Details { get; }
+
+    public ConflictException(string message) : base(message)
     {
-        public string Details { get; }
+        Details = string.Empty;
+    }
 
-        public ConflictException(string message) : base(message)
-        {
-            Details = string.Empty;
-        }
-
-        public ConflictException(string message, string details) : base(message)
-        {
-            Details = details;
-        }
+    public ConflictException(string message, string details) : base(message)
+    {
+        Details = details;
     }
 }
