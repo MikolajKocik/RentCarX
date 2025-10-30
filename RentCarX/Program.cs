@@ -9,7 +9,6 @@ using RentCarX.Presentation.Extensions;
 using RentCarX.Presentation.Middleware;
 using Serilog;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
 Console.WriteLine($"Environment Name: {builder.Environment.EnvironmentName}");

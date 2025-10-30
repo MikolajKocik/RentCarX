@@ -10,6 +10,7 @@ using RentCarX.Application.Interfaces.Services.NotificationStrategy;
 using RentCarX.Application.MappingsProfile;
 using RentCarX.Application.PipelineBehaviors;
 using RentCarX.Application.Services.NotificationService;
+using RentCarX.Application.Services.NotificationService.Flags;
 using RentCarX.Application.Services.NotificationService.Settings;
 using Serilog;
 using System.Text;
@@ -24,6 +25,11 @@ public static class WebApplicationBuilderExtensions
         builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
         builder.Services.Configure<NotificationHubSettings>(
             builder.Configuration.GetSection("NotificationHub"));
+
+        // feature flags
+        builder.Services.Configure<NotificationFeatureFlags>(
+            builder.Configuration.GetSection("FeatureManagement"));
+
         // notification strategy pattern
         builder.Services.AddTransient<INotificationSender, SmtpNotificationSender>();
         builder.Services.AddTransient<INotificationSender, AzureNotificationSender>();

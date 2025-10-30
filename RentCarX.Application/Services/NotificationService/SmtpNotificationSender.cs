@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Options;
+using RentCarX.Application.Helpers;
 using RentCarX.Application.Interfaces.Services.NotificationStrategy;
 using RentCarX.Application.Services.NotificationService.Settings;
 using System.Net;
@@ -15,8 +16,12 @@ public sealed class SmtpNotificationSender : INotificationSender
         _smtpSettings = smtpSettings.Value;
     }
 
-    public async Task SendNotificationAsync(string toEmail, string subject, string body)
+    NotificationStrategyOptions INotificationSender.StrategyName => NotificationStrategyOptions.Smtp;
+
+    public async Task SendNotificationAsync(string subject, string body, CancellationToken cancellationToken, string? toEmail)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(toEmail, nameof(toEmail));
+
         using (var client = new SmtpClient(_smtpSettings.Server, _smtpSettings.Port))
         {
             client.EnableSsl = _smtpSettings.EnableSsl;
@@ -32,7 +37,7 @@ public sealed class SmtpNotificationSender : INotificationSender
 
             mailMessage.To.Add(toEmail);
 
-            await client.SendMailAsync(mailMessage);
+            await client.SendMailAsync(mailMessage, cancellationToken);
         }
     }
 }

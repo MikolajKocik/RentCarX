@@ -1,6 +1,9 @@
-﻿namespace RentCarX.Application.Interfaces.Services.NotificationStrategy;
+﻿using RentCarX.Application.Helpers;
+
+namespace RentCarX.Application.Interfaces.Services.NotificationStrategy;
 
 public interface INotificationSender
 {
-    Task SendNotificationAsync(string recipientEmail, string subject, string messageBody);
+    NotificationStrategyOptions StrategyName { get; }
+    Task SendNotificationAsync(string subject, string messageBody, CancellationToken cancellationToken, string? recipientTag = null);
 }

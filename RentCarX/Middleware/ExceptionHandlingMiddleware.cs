@@ -40,7 +40,7 @@ namespace RentCarX.Presentation.Middleware
             HttpStatusCode statusCode = HttpStatusCode.InternalServerError; 
             string title = "An unexpected internal server error occurred.";
             string detail = "An unexpected error occurred. Please try again later."; 
-            string errorCode = "InternalServerError"; 
+            string? errorCode = "InternalServerError"; 
 
             switch (exception)
             {
