@@ -1,7 +1,9 @@
 ﻿using Hangfire;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using RentCarX.Domain.Models;
 using RentCarX.HangfireWorker.Jobs;
 using RentCarX.Infrastructure.Extensions;
 using RentCarX.Infrastructure.Helpers;
