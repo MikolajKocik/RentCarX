@@ -8,7 +8,9 @@
         public int Year { get; set; }
         public string FuelType { get; set; } = default!;
         public decimal PricePerDay { get; set; }
-        public bool IsAvailable { get; set; } = true;
+
+        // 1 = true | 0 = false
+        public int IsAvailableFlag = 1;
 
         // Stripe integration
         public string? StripeProductId { get; set; }
