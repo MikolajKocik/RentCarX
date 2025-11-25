@@ -13,6 +13,7 @@ using RentCarX.Application.Services.NotificationService;
 using RentCarX.Application.Services.NotificationService.Flags;
 using RentCarX.Application.Services.NotificationService.Settings;
 using Serilog;
+using System.Collections.Concurrent;
 using System.Text;
 
 namespace RentCarX.Presentation.Extensions;
@@ -21,6 +22,9 @@ public static class WebApplicationBuilderExtensions
 {
     public static void AddPresentation(this WebApplicationBuilder builder)
     {
+        // paraller queue for reservation background job
+        builder.Services.AddSingleton(new ConcurrentQueue<int>());
+
         // notification configs
         builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
         builder.Services.Configure<NotificationHubSettings>(

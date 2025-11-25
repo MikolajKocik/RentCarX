@@ -8,6 +8,7 @@ using RentCarX.Domain.Interfaces.DbContext;
 using RentCarX.Domain.Interfaces.Repositories;
 using RentCarX.Domain.Interfaces.UserContext;
 using RentCarX.HangfireWorker;
+using System.Collections.Concurrent;
 
 namespace RentCarX.Application.CQRS.Commands.Reservation.CreateReservation;
 
@@ -20,6 +21,7 @@ public class CreateReservationCommandHandler : IRequestHandler<CreateReservation
     private readonly NotificationFeatureFlags _flags;
     private readonly IJobScheduler _jobScheduler;
     private readonly IRentCarX_DbContext _context;
+    private readonly ConcurrentQueue<Guid> _reservationQueue;
 
     public CreateReservationCommandHandler(
         IReservationRepository reservationRepository,
@@ -28,7 +30,8 @@ public class CreateReservationCommandHandler : IRequestHandler<CreateReservation
         IEnumerable<INotificationSender> senders,
         IOptions<NotificationFeatureFlags> flags,
         IJobScheduler jobScheduler,
-        IRentCarX_DbContext context
+        IRentCarX_DbContext context,
+        ConcurrentQueue<Guid> reservationQueue
         )
     {
         _reservationRepository = reservationRepository;
@@ -38,6 +41,7 @@ public class CreateReservationCommandHandler : IRequestHandler<CreateReservation
         _flags = flags.Value;
         _jobScheduler = jobScheduler;
         _context = context;
+        _reservationQueue = reservationQueue;
     }
 
     public async Task<Guid> Handle(CreateReservationCommand request, CancellationToken cancellationToken)
@@ -53,6 +57,8 @@ public class CreateReservationCommandHandler : IRequestHandler<CreateReservation
 
             if (!CheckReservation.TryReserveCar(car))
                 throw new BadRequestException("Car not available");
+
+            _reservationQueue.Enqueue(car.Id);
 
             bool overlapping = await _reservationRepository.HasOverlappingReservationAsync(request.CarId, request.StartDate, request.EndDate, cancellationToken);
 
@@ -84,17 +90,21 @@ public class CreateReservationCommandHandler : IRequestHandler<CreateReservation
               </body>
             </html>";
 
+            var tasks = new List<Task>();
+
             if (_flags.UseAzureNotifications)
             {
                 INotificationSender azureNotificationHub = _senders.First(s => s.StrategyName.Equals(NotificationStrategyOptions.Azure));
-                await azureNotificationHub.SendNotificationAsync(subject, messageBody, cancellationToken, _userContext.Email);
+                tasks.Add(azureNotificationHub.SendNotificationAsync(subject, messageBody, cancellationToken, _userContext.Email));
             }
 
             if (_flags.UseSmtpProtocol)
             {
                 INotificationSender smtpProtocol = _senders.First(s => s.StrategyName.Equals(NotificationStrategyOptions.Smtp));
-                await smtpProtocol.SendNotificationAsync(subject, messageBody, cancellationToken, _userContext.Email);
+                tasks.Add(smtpProtocol.SendNotificationAsync(subject, messageBody, cancellationToken, _userContext.Email));
             }
+
+            await Task.WhenAll(tasks);
 
             if (reservation.EndDate > DateTime.UtcNow)
             {
