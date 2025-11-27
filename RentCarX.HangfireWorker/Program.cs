@@ -1,20 +1,30 @@
 ﻿using Hangfire;
-using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using RentCarX.Domain.Models;
 using RentCarX.HangfireWorker.Jobs;
 using RentCarX.Infrastructure.Extensions;
-using RentCarX.Infrastructure.Helpers;
+using RentCarX.Infrastructure.Helpers.Development;
+using RentCarX.Infrastructure.Helpers.Production;
 
 var host = Host.CreateDefaultBuilder(args)
     .ConfigureServices((context, services) =>
     {
-        string connectionString = ConnectionString.GetConnectionString(context.Configuration);
+        string hangfireConnectionString = string.Empty;
+
+        if (context.HostingEnvironment.IsDevelopment())
+        {
+            hangfireConnectionString = ConnectionString.GetConnectionString(context.Configuration);
+        }
+        else
+        {
+            IConfiguration configuration = context.Configuration;
+            hangfireConnectionString = AzureSqlConfiguration.GetConnectionString(configuration);
+        }
 
         services.AddHangfire(config =>
-          config.UseSqlServerStorage(connectionString));
+            config.UseSqlServerStorage(hangfireConnectionString));
 
         services.AddHangfireServer();
 
@@ -26,7 +36,7 @@ var host = Host.CreateDefaultBuilder(args)
     
 RecurringJob.AddOrUpdate<UpdateCarAvailabilityJob>(
     "update-car-availability",
-    job => job.RunAsync(CancellationToken.None),
+    job => job.ExecuteAsync(CancellationToken.None),
     Cron.Minutely);
 
 await host.RunAsync();

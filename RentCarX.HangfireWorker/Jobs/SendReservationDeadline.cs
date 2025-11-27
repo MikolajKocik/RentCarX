@@ -1,14 +1,16 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RentCarX.Application.Helpers;
 using RentCarX.Application.Interfaces.Services.NotificationStrategy;
 using RentCarX.Application.Services.NotificationService.Flags;
 using RentCarX.Domain.Interfaces.Repositories;
 using RentCarX.Domain.Models;
+using RentCarX.HangfireWorker.Jobs.Abstractions;
 
 namespace RentCarX.HangfireWorker.Jobs;
 
-public sealed class SendReservationDeadline
+public sealed class SendReservationDeadline : JobPlanner
 {
     private readonly IReservationRepository _reservationRepository;
     private readonly IEnumerable<INotificationSender> _sender;
@@ -17,15 +19,15 @@ public sealed class SendReservationDeadline
     public SendReservationDeadline(
         IReservationRepository reservationRepository,
         IEnumerable<INotificationSender> sender,
-        IOptions<NotificationFeatureFlags> flags
-        )
+        IOptions<NotificationFeatureFlags> flags,
+        ILogger<UpdateCarAvailabilityJob> logger) : base(logger)
     {
         _reservationRepository = reservationRepository;
         _sender = sender;
         _flags = flags.Value;
     }
 
-    public async Task SendReminderAsync(CancellationToken cancellationToken)
+    public override async Task PerformJobAsync(CancellationToken cancellationToken)
     {
         DateTime now = DateTime.UtcNow;
         DateTime targetTime = now.AddMinutes(30);
@@ -40,8 +42,12 @@ public sealed class SendReservationDeadline
 
     private async Task SetNotificationAsync(DateTime targetTime, INotificationSender notification, CancellationToken cancellationToken)
     {
+        DateTime from = targetTime.AddMinutes(-1);
+        DateTime to = targetTime.AddMinutes(1);
+
         List<Reservation> reservations = await _reservationRepository.GetAll()
-         .Where(r => Math.Abs((r.EndDate - targetTime).TotalMinutes) <= 1)
+         .Include(r => r.User)
+         .Where(r => r.EndDate >= from && r.EndDate <= to)
          .ToListAsync(cancellationToken);
 
         foreach (var reservation in reservations)

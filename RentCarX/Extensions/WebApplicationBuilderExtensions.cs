@@ -6,12 +6,15 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.FeatureManagement;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using RentCarX.Application.Interfaces.Services.Hangfire;
 using RentCarX.Application.Interfaces.Services.NotificationStrategy;
+using RentCarX.Application.Jobs;
 using RentCarX.Application.MappingsProfile;
 using RentCarX.Application.PipelineBehaviors;
 using RentCarX.Application.Services.NotificationService;
 using RentCarX.Application.Services.NotificationService.Flags;
 using RentCarX.Application.Services.NotificationService.Settings;
+using RentCarX.HangfireWorker.Common;
 using Serilog;
 using System.Collections.Concurrent;
 using System.Text;
@@ -22,8 +25,14 @@ public static class WebApplicationBuilderExtensions
 {
     public static void AddPresentation(this WebApplicationBuilder builder)
     {
-        // paraller queue for reservation background job
-        builder.Services.AddSingleton(new ConcurrentQueue<int>());
+        // parallel queue for reservation background job
+        builder.Services.AddSingleton(new ConcurrentQueue<Guid>());
+
+        builder.Services.AddSingleton<ReservationQueueWorker>();
+        builder.Services.AddSingleton<IHostedService>(sp => sp.GetRequiredService<ReservationQueueWorker>());
+
+        // hangfire job scheduler
+        builder.Services.AddSingleton<IJobScheduler, HangfireJobScheduler>();
 
         // notification configs
         builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
@@ -115,7 +124,6 @@ public static class WebApplicationBuilderExtensions
        );
 
         // MediatR configuration
-
         builder.Services.AddValidatorsFromAssembly(typeof(AssemblyMarker).Assembly)
             .AddFluentValidationAutoValidation();
 

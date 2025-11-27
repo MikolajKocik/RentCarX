@@ -1,16 +1,18 @@
-﻿using RentCarX.Domain.Interfaces.Repositories;
+﻿using Microsoft.Extensions.Logging;
+using RentCarX.Domain.Interfaces.Repositories;
+using RentCarX.HangfireWorker.Jobs.Abstractions;
 
 namespace RentCarX.HangfireWorker.Jobs
 {
-    public sealed class UpdateCarAvailabilityJob
+    public sealed class UpdateCarAvailabilityJob : JobPlanner
     {
         private readonly ICarRepository _carRepository;
         private readonly IReservationRepository _reservationRepository;
 
         public UpdateCarAvailabilityJob(
             ICarRepository carRepository,
-            IReservationRepository reservationRepository
-            )
+            IReservationRepository reservationRepository,
+            ILogger<UpdateCarAvailabilityJob> logger) : base(logger)
         {
             _carRepository = carRepository;
             _reservationRepository = reservationRepository;
@@ -25,7 +27,7 @@ namespace RentCarX.HangfireWorker.Jobs
         /// cancellation.</remarks>
         /// <param name="cancellationToken">A token that can be used to cancel the operation.</param>
         /// <returns>A task that represents the asynchronous operation.</returns>
-        public async Task RunAsync(CancellationToken cancellationToken)
+        public override async Task PerformJobAsync(CancellationToken cancellationToken)
         {
             var now = DateTime.UtcNow;
 

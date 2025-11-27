@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using RentCarX.Application.Extensions;
 using RentCarX.Infrastructure.Data;
 using RentCarX.Infrastructure.Extensions;
+using RentCarX.Infrastructure.Settings;
 using RentCarX.Presentation.Extensions;
 using RentCarX.Presentation.Middleware;
 using Serilog;
@@ -48,6 +49,9 @@ else
 {
     builder.Services.AddDataProtection()
             .PersistKeysToFileSystem(new DirectoryInfo(@"C:\DataProtectionKeys"));
+
+    builder.Services.Configure<AzureSqlConnection>(
+        builder.Configuration.GetSection("AzureSqlConnection"));
 }
 
 var app = builder.Build();

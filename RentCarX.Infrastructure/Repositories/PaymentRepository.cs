@@ -29,5 +29,22 @@ namespace RentCarX.Infrastructure.Repositories
         public Task<Payment?> GetBySessionIdAsync(string sessionId, CancellationToken cancellationToken = default)
             => _dbContext.Payments
             .FirstOrDefaultAsync(p => p.StripeCheckoutSessionId == sessionId, cancellationToken);
+
+        public async Task<Payment?> GetByRefundIdAsync(string refundId, CancellationToken cancellationToken = default)
+        {
+            var refund = await _dbContext.Refunds
+                .Include(r => r.Payment)
+                .FirstOrDefaultAsync(r => r.StripeRefundId == refundId, cancellationToken);
+
+            if (refund is not null)
+                return refund.Payment;
+
+            var paymentByCharge = await _dbContext.Payments
+                .FirstOrDefaultAsync(
+                    p => p.StripePaymentIntentId == refundId ||
+                    p.StripeCheckoutSessionId == refundId, cancellationToken);
+
+            return paymentByCharge;
+        }
     }
 }

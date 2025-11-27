@@ -12,5 +12,6 @@ namespace RentCarX.Domain.Interfaces.Repositories
         Task AddAsync(Payment payment, CancellationToken cancellationToken = default);
         Task UpdateAsync(Payment payment, CancellationToken cancellationToken = default);
         Task<Payment?> GetBySessionIdAsync(string sessionId, CancellationToken cancellationToken = default);
+        Task<Payment?> GetByRefundIdAsync(string refundId, CancellationToken cancellationToken = default);
     }
 }

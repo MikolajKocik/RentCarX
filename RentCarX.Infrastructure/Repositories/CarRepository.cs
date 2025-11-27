@@ -17,7 +17,7 @@ public sealed class CarRepository : ICarRepository
     public async Task UpdateAvailabilityForCarsAsync(IEnumerable<Guid> carIds, bool isAvailable, CancellationToken cancellationToken)
         => await _context.Cars
             .Where(c => carIds.Contains(c.Id))
-            .ExecuteUpdateAsync(s => s.SetProperty(c => c.IsAvailable, isAvailable), cancellationToken);
+            .ExecuteUpdateAsync(s => s.SetProperty(c => c.IsAvailableFlag == 1, isAvailable), cancellationToken);
 
     public async Task CreateAsync(Car car, CancellationToken cancellation)
     {
@@ -27,7 +27,7 @@ public sealed class CarRepository : ICarRepository
 
     public async Task<List<Car>> GetUnavailableCarsAsync(CancellationToken cancellationToken)
         => await _context.Cars
-            .Where(c => !c.IsAvailable)
+            .Where(c => c.IsAvailableFlag == 0)
             .ToListAsync(cancellationToken);
 
     public async Task<Car?> GetCarByIdAsync(Guid id, CancellationToken cancellation) 
@@ -79,7 +79,7 @@ public sealed class CarRepository : ICarRepository
             query = query.Where(c => c.PricePerDay <= maxPrice.Value);
 
         if (isAvailable.HasValue)
-            query = query.Where(c => c.IsAvailable == isAvailable.Value);
+            query = query.Where(c => (c.IsAvailableFlag == 1) == isAvailable.Value);
 
         return query; 
     }

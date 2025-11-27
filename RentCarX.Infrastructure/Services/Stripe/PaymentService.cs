@@ -31,13 +31,18 @@ namespace RentCarX.Infrastructure.Services.Stripe
             _settings = stripeOptions.Value;
         }
 
-        public async Task<string> CreateCheckoutSessionAsync(CreateCheckoutSessionRequest request, CancellationToken ct = default)
+        public async Task<string> CreateCheckoutSessionAsync(
+            CreateCheckoutSessionRequest request, 
+            CancellationToken ct = default
+            )
         {
             var reservation = await _reservationRepository.GetReservationByIdAsync(request.ReservationId, ct);
-            if (reservation == null) throw new NotFoundException("Reservation not found.", request.ReservationId.ToString());
+            if (reservation is null)
+                throw new NotFoundException("Reservation not found.", request.ReservationId.ToString());
 
             var car = await _carRepository.GetCarByIdAsync(reservation.CarId, ct);
-            if (car == null) throw new NotFoundException("Car associated with the reservation not found.", reservation.CarId.ToString());
+            if (car is null) 
+                throw new NotFoundException("Car associated with the reservation not found.", reservation.CarId.ToString());
             if (string.IsNullOrEmpty(car.StripePriceId))
                 throw new InvalidOperationException("Car is not synchronized with Stripe (missing price ID).");
 
@@ -70,7 +75,7 @@ namespace RentCarX.Infrastructure.Services.Stripe
             {
                 StripeCheckoutSessionId = session.Id,
                 Amount = amount,
-                Currency = "usd",
+                Currency = "pln",
                 Status = PaymentStatus.Pending,
                 ReservationId = reservation.Id,
                 UserId = request.UserId,
@@ -79,22 +84,31 @@ namespace RentCarX.Infrastructure.Services.Stripe
 
             await _paymentRepository.AddAsync(payment, ct);
 
-            return session.Url;
+            return session.Url!;
         }
 
-        public async Task HandleCheckoutSessionCompletedAsync(string sessionId, CancellationToken ct = default)
+        public async Task HandleCheckoutSessionCompletedAsync(
+            string sessionId,
+            string? paymentIntentId = null,
+            string? customerId = null,  
+            CancellationToken ct = default)
         {
             var payment = await _paymentRepository.GetBySessionIdAsync(sessionId, ct);
-            if (payment == null) return;
+            if (payment is null) return;
             if (payment.Status == PaymentStatus.Succeeded) return;
 
             payment.Status = PaymentStatus.Succeeded;
             payment.SucceededAt = DateTime.UtcNow;
 
+            if (!string.IsNullOrEmpty(paymentIntentId))
+                payment.StripePaymentIntentId = paymentIntentId;
+            if (!string.IsNullOrEmpty(customerId))
+                payment.StripeCustomerId = customerId;
+
             if (payment.ReservationId.HasValue)
             {
                 var reservation = await _reservationRepository.GetReservationByIdAsync(payment.ReservationId.Value, ct);
-                if (reservation != null)
+                if (reservation is not null)
                 {
                     reservation.IsPaid = true;
                     await _reservationRepository.UpdateAsync(reservation, ct);
@@ -104,13 +118,31 @@ namespace RentCarX.Infrastructure.Services.Stripe
             await _paymentRepository.UpdateAsync(payment, ct);
         }
 
-        public async Task HandleRefundSucceededAsync(string refundId, CancellationToken ct = default)
+        public async Task HandleRefundSucceededAsync(
+            string refundId,
+            string? chargeId = null,
+            long? amount = null,
+            string? currency = null,
+            CancellationToken ct = default
+            )
         {
-            // TODO 
-            // Pobierz Payment po refund (repo musi posiadać metodę GetByRefundIdAsync albo przez join)
-            // Ustaw payment.Status = PaymentStatus.Refunded; payment.RefundedAt = DateTime.UtcNow;
-            // Zapisz.
-            await Task.CompletedTask;
+            var payment = await _paymentRepository.GetByRefundIdAsync(refundId, ct);
+            if (payment is null || payment.Status == PaymentStatus.Refunded) return;
+
+            payment.Status = PaymentStatus.Refunded;
+            payment.RefundedAt = DateTime.UtcNow;
+
+            if (payment.ReservationId.HasValue)
+            {
+                var reservation = await _reservationRepository.GetReservationByIdAsync(payment.ReservationId.Value, ct);
+                if (reservation is not null)
+                {
+                    reservation.IsPaid = false;
+                    await _reservationRepository.UpdateAsync(reservation, ct);
+                }
+            }
+
+            await _paymentRepository.UpdateAsync(payment, ct);
         }
     }
 }

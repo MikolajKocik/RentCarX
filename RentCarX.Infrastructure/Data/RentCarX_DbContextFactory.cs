@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
-using RentCarX.Infrastructure.Helpers;
+using RentCarX.Infrastructure.Helpers.Development;
 
 namespace RentCarX.Infrastructure.Data 
 {

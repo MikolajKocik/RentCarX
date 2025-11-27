@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 
-namespace RentCarX.Infrastructure.Helpers
+namespace RentCarX.Infrastructure.Helpers.Development
 {
     public static class ConnectionString
     {

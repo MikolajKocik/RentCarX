@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RentCarX.Infrastructure.Helpers
+namespace RentCarX.Infrastructure.Helpers.Development
 {
     internal static class ConnectionStringValidation
     {
@@ -12,7 +12,7 @@ namespace RentCarX.Infrastructure.Helpers
         {
             foreach (string parameter in databaseParameters)
             {
-                ArgumentNullException.ThrowIfNullOrWhiteSpace(parameter);
+                ArgumentException.ThrowIfNullOrWhiteSpace(parameter);
             };
         }
     }

@@ -6,8 +6,6 @@ namespace RentCarX.Application.Helpers;
 
 public static class CheckReservation
 {
-    private static ConcurrentDictionary<Guid, object> _locks = new(); 
-
     public static bool IsReservationMarkedAsDeleted(
         Guid id,
         IReservationRepository repository
