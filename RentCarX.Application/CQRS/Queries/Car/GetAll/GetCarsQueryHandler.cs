@@ -36,7 +36,6 @@ namespace RentCarX.Application.CQRS.Queries.Car.GetAll
                     Brand = c.Brand,
                     Model = c.Model,
                     PricePerDay = c.PricePerDay,
-                    IsAvailable = c.IsAvailable,
                     Year = c.Year, 
                     FuelType = c.FuelType
                 })

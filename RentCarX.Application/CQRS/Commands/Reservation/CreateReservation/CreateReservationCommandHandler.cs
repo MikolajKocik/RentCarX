@@ -1,14 +1,14 @@
 ﻿using MediatR;
 using Microsoft.Extensions.Options;
 using RentCarX.Application.Helpers;
+using RentCarX.Application.Interfaces.Services.Hangfire;
 using RentCarX.Application.Interfaces.Services.NotificationStrategy;
+using RentCarX.Application.Jobs;
 using RentCarX.Application.Services.NotificationService.Flags;
 using RentCarX.Domain.Exceptions;
 using RentCarX.Domain.Interfaces.DbContext;
 using RentCarX.Domain.Interfaces.Repositories;
 using RentCarX.Domain.Interfaces.UserContext;
-using RentCarX.HangfireWorker;
-using System.Collections.Concurrent;
 
 namespace RentCarX.Application.CQRS.Commands.Reservation.CreateReservation;
 
@@ -21,7 +21,7 @@ public class CreateReservationCommandHandler : IRequestHandler<CreateReservation
     private readonly NotificationFeatureFlags _flags;
     private readonly IJobScheduler _jobScheduler;
     private readonly IRentCarX_DbContext _context;
-    private readonly ConcurrentQueue<Guid> _reservationQueue;
+    private readonly ReservationQueueWorker _reservationQueue;
 
     public CreateReservationCommandHandler(
         IReservationRepository reservationRepository,
@@ -31,7 +31,7 @@ public class CreateReservationCommandHandler : IRequestHandler<CreateReservation
         IOptions<NotificationFeatureFlags> flags,
         IJobScheduler jobScheduler,
         IRentCarX_DbContext context,
-        ConcurrentQueue<Guid> reservationQueue
+        ReservationQueueWorker reservationQueue
         )
     {
         _reservationRepository = reservationRepository;
