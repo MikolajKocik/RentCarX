@@ -9,6 +9,7 @@ using RentCarX.Infrastructure.Helpers.Development;
 using RentCarX.Infrastructure.Helpers.Production;
 using RentCarX.Infrastructure.Settings;
 using RentCarX.Presentation.Extensions;
+using RentCarX.Presentation.Helpers;
 using RentCarX.Presentation.Middleware;
 using Serilog;
 using System.Diagnostics;
@@ -42,7 +43,7 @@ builder.Services.AddApiVersioning(options =>
 .AddApiExplorer(options =>
 {
     // formatting version in swagger's UI
-    options.GroupNameFormat = "'v'VVV";
+    options.GroupNameFormat = ApiVersioningHelper.GroupNameFormat;
     // automatic version substitution in routing templates
     options.SubstituteApiVersionInUrl = true;
 });

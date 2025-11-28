@@ -1,11 +1,7 @@
-﻿using Asp.Versioning.ApiExplorer;
-using FluentValidation;
+﻿using FluentValidation;
 using FluentValidation.AspNetCore;
 using MediatR;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.FeatureManagement;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
 using RentCarX.Application.Interfaces.Services.Hangfire;
 using RentCarX.Application.Interfaces.Services.NotificationStrategy;
 using RentCarX.Application.Jobs;
@@ -15,9 +11,10 @@ using RentCarX.Application.Services.NotificationService;
 using RentCarX.Application.Services.NotificationService.Flags;
 using RentCarX.Application.Services.NotificationService.Settings;
 using RentCarX.HangfireWorker.Common;
+using RentCarX.Presentation.Extensions.JWT;
+using RentCarX.Presentation.Extensions.Swagger;
 using Serilog;
 using System.Collections.Concurrent;
-using System.Text;
 
 namespace RentCarX.Presentation.Extensions;
 
@@ -48,63 +45,10 @@ public static class WebApplicationBuilderExtensions
         builder.Services.AddTransient<INotificationSender, AzureNotificationSender>();
 
         // swagger configuration
-        builder.Services.AddSwaggerGen(c =>
-        {
-            var apiVersionDescriptionProvider = builder.Services.BuildServiceProvider()
-                .GetRequiredService<IApiVersionDescriptionProvider>();
-
-            foreach (var description in apiVersionDescriptionProvider.ApiVersionDescriptions)
-            {
-                c.SwaggerDoc(description.GroupName, new OpenApiInfo
-                {
-                    Title = $"Api version: {description.ApiVersion}",
-                    Version = description.ApiVersion.ToString()
-                });
-            }
-
-            c.AddSecurityDefinition("bearerAuth", new OpenApiSecurityScheme
-            {
-                Type = SecuritySchemeType.Http,
-                Scheme = "Bearer",
-                BearerFormat = "JWT",
-                In = ParameterLocation.Header,
-                Description = "Provide JWT Token without 'Bearer' prefix"
-            });
-
-            c.AddSecurityRequirement(new OpenApiSecurityRequirement
-            {
-                {
-                    new OpenApiSecurityScheme
-                    {
-                        Reference = new OpenApiReference
-                        {
-                            Type = ReferenceType.SecurityScheme,
-                            Id = "bearerAuth"
-                        }
-                    },
-                    Array.Empty<string>()
-                }
-            });
-        });
-
+        SwaggerExtend.AddSwaggerImplementation(builder);
+       
         // JWT authentication configuration
-        builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(options =>
-            {
-                var config = builder.Configuration;
-
-                options.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuer = true,
-                    ValidIssuer = config["Jwt:Issuer"],
-                    ValidateAudience = true,
-                    ValidAudience = config["Jwt:Audience"],
-                    ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["Jwt:Key"]!)),
-                    ValidateLifetime = true,
-                    ClockSkew = TimeSpan.Zero,
-                };
-            });
+        JsonWebTokenExtend.SetToken(builder);
 
         builder.Services.AddControllers();
 
@@ -137,7 +81,7 @@ public static class WebApplicationBuilderExtensions
 
         if (string.IsNullOrEmpty(stripeApiKey))
         {
-            throw new InvalidOperationException("Stripe Secret Key environment variable is not set.");
+            throw new InvalidOperationException();
         }
     }
 }
