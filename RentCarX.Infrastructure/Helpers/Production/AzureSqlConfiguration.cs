@@ -4,10 +4,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using RentCarX.Infrastructure.Data;
 using RentCarX.Infrastructure.Settings;
+using System.Diagnostics;
 
 namespace RentCarX.Infrastructure.Helpers.Production;
 
-public static class AzureSqlConfiguration   
+public static class AzureSqlConfiguration
 {
     public static void SetDbContext(IServiceCollection services, IConfiguration configuration)
     {
@@ -19,7 +20,7 @@ public static class AzureSqlConfiguration
     public static string GetConnectionString(IConfiguration configuration)
     {
         var sqlSettings = configuration.GetSection("AzureSqlConnection")
-            .Get<AzureSqlConnection>() 
+            .Get<AzureSqlConnection>()
                 ?? throw new Exception("No azure settings are available for sql database.");
 
         var builder = new SqlConnectionStringBuilder()

@@ -5,17 +5,27 @@ using Microsoft.EntityFrameworkCore;
 using RentCarX.Application.Extensions;
 using RentCarX.Infrastructure.Data;
 using RentCarX.Infrastructure.Extensions;
+using RentCarX.Infrastructure.Helpers.Development;
+using RentCarX.Infrastructure.Helpers.Production;
 using RentCarX.Infrastructure.Settings;
 using RentCarX.Presentation.Extensions;
 using RentCarX.Presentation.Middleware;
 using Serilog;
+using System.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
 
-Console.WriteLine($"Environment Name: {builder.Environment.EnvironmentName}");
+Debug.WriteLine($"Environment Name: {builder.Environment.EnvironmentName}");
+
+string connectionString = builder.Environment.IsDevelopment()
+    ? ConnectionString.GetConnectionString(builder.Configuration)
+    : AzureSqlConfiguration.GetConnectionString(builder.Configuration);
+Debug.WriteLine(connectionString);
+
+builder.Services.AddInfrastructure(builder.Configuration, builder.Environment, connectionString);
 
 builder.Services.AddApplication(builder.Configuration);
-builder.Services.AddInfrastructure(builder.Configuration, builder.Environment);
+
 builder.AddPresentation();
 
 builder.Services.AddApiVersioning(options =>
@@ -59,7 +69,6 @@ var app = builder.Build();
 Console.WriteLine($"App Environment Name: {app.Environment.EnvironmentName}");
 
 // serilog
-
 app.UseSerilogRequestLogging();
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
@@ -73,7 +82,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 // swagger 
-
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -100,11 +108,20 @@ using (var scope = app.Services.CreateScope())
     var dbContext = scope.ServiceProvider
         .GetRequiredService<RentCarX_DbContext>();
 
-    var pendingMigrations = dbContext.Database.GetPendingMigrations();
-
-    if (pendingMigrations.Any())
+    try
     {
-        dbContext.Database.Migrate();
+        var pendingMigrations = dbContext.Database.GetPendingMigrations();
+
+        if (pendingMigrations.Any())
+        {
+            dbContext.Database.Migrate();
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine("Migration ERROR");
+        Console.WriteLine(ex.ToString());
+        throw;
     }
 }
 

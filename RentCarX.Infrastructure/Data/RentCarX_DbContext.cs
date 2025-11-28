@@ -1,13 +1,14 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using RentCarX.Domain.Interfaces.DbContext;
 using RentCarX.Domain.Models;
 using RentCarX.Domain.Models.Stripe;
 using RentCarX.Infrastructure.Data.Schemas;
 
 namespace RentCarX.Infrastructure.Data
 {
-    public sealed class RentCarX_DbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid> 
+    public sealed class RentCarX_DbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>, IRentCarX_DbContext
     {
         internal DbSet<Car> Cars { get; set; }
         internal DbSet<Reservation> Reservations { get; set; }

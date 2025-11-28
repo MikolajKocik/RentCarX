@@ -1,6 +1,5 @@
 ﻿using Hangfire;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using RentCarX.HangfireWorker.Jobs;
@@ -11,33 +10,33 @@ using RentCarX.Infrastructure.Helpers.Production;
 var host = Host.CreateDefaultBuilder(args)
     .ConfigureServices((context, services) =>
     {
-        string hangfireConnectionString = string.Empty;
+        string connectionString = context.HostingEnvironment.IsDevelopment()
+            ? ConnectionString.GetConnectionString(context.Configuration)
+            : AzureSqlConfiguration.GetConnectionString(context.Configuration);
 
-        if (context.HostingEnvironment.IsDevelopment())
-        {
-            hangfireConnectionString = ConnectionString.GetConnectionString(context.Configuration);
-        }
-        else
-        {
-            IConfiguration configuration = context.Configuration;
-            hangfireConnectionString = AzureSqlConfiguration.GetConnectionString(configuration);
-        }
+        services.AddInfrastructure(context.Configuration, context.HostingEnvironment, connectionString);
 
         services.AddHangfire(config =>
-            config.UseSqlServerStorage(hangfireConnectionString));
+            config.UseSqlServerStorage(connectionString));
 
         services.AddHangfireServer();
-
-        services.AddInfrastructure(context.Configuration, context.HostingEnvironment);
 
         services.AddTransient<UpdateCarAvailabilityJob>();
     })
     .Build();
-    
-RecurringJob.AddOrUpdate<UpdateCarAvailabilityJob>(
-    "update-car-availability",
-    job => job.ExecuteAsync(CancellationToken.None),
-    Cron.Minutely);
+
+
+using (var scope = host.Services.CreateScope())
+{
+    var serviceProvider = scope.ServiceProvider;
+
+    var recurringJobManager = serviceProvider.GetRequiredService<IRecurringJobManager>();
+
+    recurringJobManager.AddOrUpdate<UpdateCarAvailabilityJob>(
+        "update-car-availability",
+        job => job.ExecuteAsync(CancellationToken.None),
+        Cron.Minutely);
+}
 
 await host.RunAsync();
     

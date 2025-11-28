@@ -4,17 +4,30 @@ services:
     build:
       context: .
       dockerfile: ./RentCarX/Dockerfile
+    env_file:
+      - .env
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+    # dev config
       - Database__Password=${SA_PASSWORD}
       - Database__Server=sqlserver 
       - Database__DatabaseName=RentCarXDev
       - Database__Username=sa
       - Database__Port=1433
+    # prod config
+      - AzureSqlConnection__DataSource=${DATA_SOURCE}
+      - AzureSqlConnection__UserID=${USER_ID}
+      - AzureSqlConnection__Password=${PASSWORD}
+      - AzureSqlConnection__InitialCatalog=${INITIAL_CATALOG}
+     # ---
+      - Stripe__SecretKey=${STRIPE_SECRET_KEY}
+      - Stripe__PublishableKey=${STRIPE_PUBLISHABLE_KEY}
+      - Stripe__WebhookSecret=${WEBHOOK}
     networks: 
       - rentcarx-dev
     ports: 
       - "8080:8080"
+      - "8081:8081" 
     volumes:
       - ./RentCarX/appsettings.Development.json:/app/appsettings.Development.json:ro
     depends_on:
@@ -51,6 +64,8 @@ services:
     build:
       context:  .
       dockerfile: ./RentCarX.HangfireWorker/Dockerfile
+    env_file:
+      - .env
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - Database__Password=${SA_PASSWORD}
@@ -58,6 +73,17 @@ services:
       - Database__DatabaseName=RentCarXDev
       - Database__Username=sa
       - Database__Port=1433
+      # ---
+      - AzureSqlConnection__DataSource=${DATA_SOURCE}
+      - AzureSqlConnection__UserID=${USER_ID}
+      - AzureSqlConnection__Password=${PASSWORD}
+      - AzureSqlConnection__InitialCatalog=${INITIAL_CATALOG}
+      # ---
+      - Stripe__SecretKey=${STRIPE_SECRET_KEY}
+      - Stripe__PublishableKey=${STRIPE_PUBLISHABLE_KEY}
+      - Stripe__WebhookSecret=${WEBHOOK}
+    volumes:
+      - ./RentCarX/appsettings.Development.json:/app/appsettings.Development.json:ro
     depends_on:
       sqlserver:
         condition: service_healthy
