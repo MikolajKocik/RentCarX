@@ -3,6 +3,12 @@
 [Ll]og/
 [Ll]ogs/
 
+# Visual Studio Connected Services
+**/Properties/ServiceDependencies/**
+**/Properties/serviceDependencies.json
+**/Properties/serviceDependencies.local.json
+*.user
+
 # Files built by Visual Studio
 *.obj
 *.csproj.user
