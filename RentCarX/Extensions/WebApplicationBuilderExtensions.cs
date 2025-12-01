@@ -3,6 +3,7 @@ using FluentValidation.AspNetCore;
 using MediatR;
 using Microsoft.FeatureManagement;
 using RentCarX.Application.Interfaces.Services.Hangfire;
+using RentCarX.Application.Interfaces.Services.Notifications;
 using RentCarX.Application.Interfaces.Services.NotificationStrategy;
 using RentCarX.Application.Jobs;
 using RentCarX.Application.MappingsProfile;
@@ -43,6 +44,9 @@ public static class WebApplicationBuilderExtensions
         // notification strategy pattern
         builder.Services.AddTransient<INotificationSender, SmtpNotificationSender>();
         builder.Services.AddTransient<INotificationSender, AzureNotificationSender>();
+
+        // notification register device -> web push
+        builder.Services.AddTransient<INotificationRegister, NotificationRegistrationService>();
 
         // swagger configuration
         SwaggerExtend.AddSwaggerImplementation(builder);
