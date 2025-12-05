@@ -5,7 +5,7 @@ using RentCarX.Infrastructure.Data;
 
 namespace RentCarX.Infrastructure.Repositories;
 
-public class CarRepository : ICarRepository
+public sealed class CarRepository : ICarRepository
 {
     private readonly RentCarX_DbContext _context;
 
@@ -13,11 +13,22 @@ public class CarRepository : ICarRepository
     {
         _context = context;
     }
+
+    public async Task UpdateAvailabilityForCarsAsync(IEnumerable<Guid> carIds, bool isAvailable, CancellationToken cancellationToken)
+        => await _context.Cars
+            .Where(c => carIds.Contains(c.Id))
+            .ExecuteUpdateAsync(s => s.SetProperty(c => c.IsAvailableFlag == 1, isAvailable), cancellationToken);
+
     public async Task CreateAsync(Car car, CancellationToken cancellation)
     {
         await _context.Cars.AddAsync(car, cancellation);
         await _context.SaveChangesAsync(cancellation);
     }
+
+    public async Task<List<Car>> GetUnavailableCarsAsync(CancellationToken cancellationToken)
+        => await _context.Cars
+            .Where(c => c.IsAvailableFlag == 0)
+            .ToListAsync(cancellationToken);
 
     public async Task<Car?> GetCarByIdAsync(Guid id, CancellationToken cancellation) 
         => await _context.Cars 
@@ -68,7 +79,7 @@ public class CarRepository : ICarRepository
             query = query.Where(c => c.PricePerDay <= maxPrice.Value);
 
         if (isAvailable.HasValue)
-            query = query.Where(c => c.IsAvailable == isAvailable.Value);
+            query = query.Where(c => (c.IsAvailableFlag == 1) == isAvailable.Value);
 
         return query; 
     }

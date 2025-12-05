@@ -2,6 +2,7 @@
 using RentCarX.Domain.Interfaces.Repositories; 
 using RentCarX.Domain.Exceptions; 
 using RentCarX.Domain.Interfaces.Services.Stripe;
+using RentCarX.Application.DTOs.Stripe;
 
 namespace RentCarX.Application.CQRS.Commands.Reservation.InitiatePayment
 {
@@ -25,9 +26,15 @@ namespace RentCarX.Application.CQRS.Commands.Reservation.InitiatePayment
                 throw new NotFoundException("Reservation", request.ReservationId.ToString());
             }
 
-            var checkoutUrl = await _paymentService.CreateCheckoutSessionAsync(reservation, cancellationToken);
+            var sessionRequest = new CreateCheckoutSessionRequest
+            {
+                ReservationId = reservation.Id,
+                UserId = reservation.UserId,
+            };
 
-            return checkoutUrl; 
+            var checkoutUrl = await _paymentService.CreateCheckoutSessionAsync(sessionRequest, cancellationToken);
+
+            return checkoutUrl;
         }
     }
 }

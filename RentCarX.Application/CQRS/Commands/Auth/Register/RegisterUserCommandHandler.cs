@@ -1,11 +1,14 @@
 ﻿using MediatR;
-using RentCarX.Application.Interfaces.JWT;
-using RentCarX.Domain.Exceptions;
 using Microsoft.AspNetCore.Identity;
-using RentCarX.Application.Interfaces.EmailService;
-using RentCarX.Application.DTOs.Auth;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using RentCarX.Application.DTOs.Auth;
+using RentCarX.Application.Helpers;
+using RentCarX.Application.Interfaces.JWT;
+using RentCarX.Application.Interfaces.Services.NotificationStrategy;
+using RentCarX.Application.Services.NotificationService.Flags;
+using RentCarX.Domain.Exceptions;
 using System.Net;
 
 namespace RentCarX.Application.CQRS.Commands.Auth.Register
@@ -14,22 +17,25 @@ namespace RentCarX.Application.CQRS.Commands.Auth.Register
     {
         private readonly IJwtTokenService _jwtService;
         private readonly UserManager<User> _userManager;
-        private readonly IEmailService _emailService;
+        private readonly IEnumerable<INotificationSender> _senders;
         private readonly IConfiguration _configuration;
+        private readonly NotificationFeatureFlags _flags;
         private readonly ILogger<RegisterUserCommandHandler> _logger;
 
         public RegisterUserCommandHandler(
             UserManager<User> userManager,
             IJwtTokenService jwtService,
-            IEmailService emailService,
+            IEnumerable<INotificationSender> senders,
             IConfiguration configuration,
-            ILogger<RegisterUserCommandHandler> logger)
+            ILogger<RegisterUserCommandHandler> logger,
+            IOptions<NotificationFeatureFlags> flags)
         {
             _userManager = userManager;
             _jwtService = jwtService;
-            _emailService = emailService;
+            _senders = senders;
             _configuration = configuration;
             _logger = logger;
+            _flags = flags.Value;
         }
 
         public async Task<RegisterUserResponseDto> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
@@ -53,11 +59,11 @@ namespace RentCarX.Application.CQRS.Commands.Auth.Register
 
             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
             var encodedToken = WebUtility.UrlEncode(token); 
-
+            // TODO url front-web
             var frontendUrl = _configuration["FrontendUrl"] ?? "https://yourfrontend.com";
 
             var confirmationUrl = $"{frontendUrl.TrimEnd('/')}/confirm-email?userId={user.Id}&token={encodedToken}";
-
+            //
             try
             {
                 var subject = "RentCarX email address confirmation";
@@ -72,7 +78,12 @@ namespace RentCarX.Application.CQRS.Commands.Auth.Register
                     </body>
                 </html>";
 
-                await _emailService.SendEmailAsync(user.Email, subject, body);
+                if (_flags.UseSmtpProtocol)
+                {
+                    var smtp = _senders.First(s => s.StrategyName.Equals(NotificationStrategyOptions.Smtp));
+                    await smtp.SendNotificationAsync(subject, body, cancellationToken, user.Email); 
+                }
+
                 _logger.LogInformation("Confirmation email sent to {Email}", user.Email);
             }
             catch (Exception ex)

@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
+using RentCarX.Infrastructure.Helpers.Development;
 
 namespace RentCarX.Infrastructure.Data 
 {
@@ -19,13 +20,7 @@ namespace RentCarX.Infrastructure.Data
 
             var optionsBuilder = new DbContextOptionsBuilder<RentCarX_DbContext>();
 
-            var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING")
-                                   ?? configuration.GetConnectionString("DefaultConnection"); 
-
-            if (string.IsNullOrEmpty(connectionString))
-            {
-                throw new InvalidOperationException("Connection string 'DB_CONNECTION_STRING' environment variable or 'DefaultConnection' in appsettings.json is not set.");
-            }
+            string connectionString = ConnectionString.GetConnectionString(configuration);
 
             optionsBuilder.UseSqlServer(connectionString);
 

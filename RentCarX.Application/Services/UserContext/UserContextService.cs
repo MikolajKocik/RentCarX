@@ -14,7 +14,12 @@ namespace RentCarX.Application.Services.User
         }
 
         public Guid UserId =>
-            Guid.Parse(_accessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new Exception("No user"));
+            Guid.Parse(_accessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value 
+                ?? throw new Exception("No user"));
+
+        public string Email =>
+            _accessor.HttpContext?.User.FindFirstValue(ClaimTypes.Email)?.ToString()
+                ?? throw new Exception("No user's email found");
     }
 
 }

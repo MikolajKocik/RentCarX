@@ -4,7 +4,7 @@ using RentCarX.Domain.Models;
 
 namespace RentCarX.Infrastructure.Configurations 
 {
-    public class ReservationConfiguration : IEntityTypeConfiguration<Reservation>
+    public sealed class ReservationConfiguration : IEntityTypeConfiguration<Reservation>
     {
         public void Configure(EntityTypeBuilder<Reservation> builder)
         {

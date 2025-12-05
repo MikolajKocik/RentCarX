@@ -1,0 +1,25 @@
+networks:
+  rentcarx-dev:
+    name: rentcarx-dev-network
+    driver: bridge
+
+volumes:
+  sqlserver_data:
+
+services:
+  rentcarx:
+    image: rentcarx:latest 
+    networks:
+      - rentcarx-dev
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    networks: 
+      - rentcarx-dev
+
+  rentcarx-hangfire:
+    image: hangfire:latest
+    networks:
+      - rentcarx-dev
+
+  

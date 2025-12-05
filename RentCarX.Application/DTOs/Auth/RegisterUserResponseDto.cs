@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace RentCarX.Application.DTOs.Auth
 {
-    public class RegisterUserResponseDto
+    public sealed record RegisterUserResponseDto
     {
-        public string JwtToken { get; set; } 
+        public required string JwtToken { get; init; } 
         public Guid UserId { get; set; } 
-        public string ConfirmationLink { get; set; } 
+        public required string ConfirmationLink { get; init; } 
     }
 }

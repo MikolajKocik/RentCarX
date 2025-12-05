@@ -1,4 +1,5 @@
-﻿using MediatR;
+﻿using Asp.Versioning;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RentCarX.Application.CQRS.Commands.Auth.ConfirmEmail;
@@ -10,7 +11,9 @@ using RentCarX.Application.DTOs.Auth;
 
 namespace RentCarX.Presentation.Controllers
 {
-    [Route("api/auth")] 
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/auth")]
+    [AllowAnonymous]
     [ApiController]
     public class AuthController : ControllerBase
     {
@@ -22,7 +25,6 @@ namespace RentCarX.Presentation.Controllers
         }
 
         [HttpPost("register")]
-        [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK)] 
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
@@ -37,7 +39,6 @@ namespace RentCarX.Presentation.Controllers
         }
 
         [HttpPost("login")]
-        [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -52,7 +53,6 @@ namespace RentCarX.Presentation.Controllers
         }
 
         [HttpPost("confirm-email")]
-        [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -63,20 +63,18 @@ namespace RentCarX.Presentation.Controllers
         }
 
         [HttpPost("forgot-password")]
-        [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK)] 
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<ForgotPasswordResponseDto>> ForgotPassword([FromBody] string email)
         {
-            var command = new ForgotPasswordCommand { Email = email };
+            var command = new ForgotPasswordCommand(email);
             var result = await _mediator.Send(command);
 
             return Ok(result);
         }
 
         [HttpPost("reset-password")]
-        [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]

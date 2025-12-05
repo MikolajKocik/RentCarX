@@ -2,52 +2,61 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using RentCarX.Application.DTOs.Auth;
-using RentCarX.Application.Interfaces.EmailService;
+using RentCarX.Application.Helpers;
+using RentCarX.Application.Interfaces.Services.NotificationStrategy;
+using RentCarX.Application.Services.NotificationService.Flags;
 
-namespace RentCarX.Application.CQRS.Commands.Auth.ForgotPassword
+namespace RentCarX.Application.CQRS.Commands.Auth.ForgotPassword;
+
+public sealed class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordCommand, ForgotPasswordResponseDto>
 {
-    public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordCommand, ForgotPasswordResponseDto>
-    {
-        private readonly UserManager<User> _userManager;
-        private readonly IEmailService _emailService;
-        private readonly IConfiguration _configuration; 
-        private readonly ILogger<ForgotPasswordCommandHandler> _logger;
+    private readonly UserManager<User> _userManager;
+    private readonly IEnumerable<INotificationSender> _senders;
+    private readonly NotificationFeatureFlags _featureFlags;
+    private readonly IConfiguration _configuration; 
+    private readonly ILogger<ForgotPasswordCommandHandler> _logger;
 
-        public ForgotPasswordCommandHandler(UserManager<User> userManager, IEmailService emailService,
-            IConfiguration configuration, ILogger<ForgotPasswordCommandHandler> logger)
+    public ForgotPasswordCommandHandler(
+        IOptions<NotificationFeatureFlags> featureFlags,
+        UserManager<User> userManager, 
+        IEnumerable<INotificationSender> senders,
+        IConfiguration configuration,
+        ILogger<ForgotPasswordCommandHandler> logger)
+    {
+        _userManager = userManager;
+        _senders = senders;
+        _configuration = configuration;
+        _featureFlags = featureFlags.Value;
+        _logger = logger; 
+    }
+
+    public async Task<ForgotPasswordResponseDto> Handle(ForgotPasswordCommand request, CancellationToken cancellationToken)
+    {
+        var user = await _userManager.FindByEmailAsync(request.Email);
+        if (user?.Email is null)
         {
-            _userManager = userManager;
-            _emailService = emailService;
-            _configuration = configuration; 
-            _logger = logger; 
+            _logger.LogInformation("Password reset requested for non-existent email: {Email}", request.Email);
+            return new ForgotPasswordResponseDto { ResetLink = "If a user with that email exists, a password reset link has been sent." };
         }
 
-        public async Task<ForgotPasswordResponseDto> Handle(ForgotPasswordCommand request, CancellationToken cancellationToken)
+        var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+        var encodedToken = Uri.EscapeDataString(resetToken);
+
+        var frontendUrl = _configuration["FrontendUrl"];
+        if (string.IsNullOrEmpty(frontendUrl))
         {
-            var user = await _userManager.FindByEmailAsync(request.Email);
-            if (user == null)
-            {
-                _logger.LogInformation("Password reset requested for non-existent email: {Email}", request.Email);
-                return new ForgotPasswordResponseDto { ResetLink = "If a user with that email exists, a password reset link has been sent." };
-            }
+            _logger.LogWarning("FrontendUrl is not configured in appsettings. Using fallback 'https://frontend.com'.");
+            frontendUrl = "https://frontend.com"; 
+        }
 
-            var resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
-            var encodedToken = Uri.EscapeDataString(resetToken);
+        var resetLink = $"{frontendUrl.TrimEnd('/')}/reset-password?userId={user.Id}&token={encodedToken}";
 
-            var frontendUrl = _configuration["FrontendUrl"];
-            if (string.IsNullOrEmpty(frontendUrl))
-            {
-                _logger.LogWarning("FrontendUrl is not configured in appsettings. Using fallback 'https://frontend.com'.");
-                frontendUrl = "https://frontend.com"; 
-            }
-
-            var resetLink = $"{frontendUrl.TrimEnd('/')}/reset-password?userId={user.Id}&token={encodedToken}";
-
-            try
-            {
-                var emailSubject = "RentCarX password reset instructions";
-                var emailBody = $@"
+        try
+        {
+            var emailSubject = "RentCarX password reset instructions";
+            var emailBody = $@"
                 <html>
                 <body>
                     <p>Hello {user.UserName ?? user.Email},</p>
@@ -59,15 +68,19 @@ namespace RentCarX.Application.CQRS.Commands.Auth.ForgotPassword
                 </body>
                 </html>";
 
-                await _emailService.SendEmailAsync(user.Email, emailSubject, emailBody);
-                Console.WriteLine($"Password reset email sent to {user.Email}. Link: {resetLink}");
-            }
-            catch (Exception ex)
+            if(_featureFlags.UseSmtpProtocol)
             {
-                _logger.LogError(ex, "Failed to send password reset email to {Email}", user.Email);
+                var smtp = _senders.First(s => s.StrategyName.Equals(NotificationStrategyOptions.Smtp));
+                await smtp.SendNotificationAsync(emailSubject, emailBody, cancellationToken, user.Email);
             }
 
-            return new ForgotPasswordResponseDto { ResetLink = resetLink };
+            Console.WriteLine($"Password reset email sent to {user.Email}. Link: {resetLink}");
         }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to send password reset email to {Email}", user.Email);
+        }
+
+        return new ForgotPasswordResponseDto { ResetLink = resetLink };
     }
 }

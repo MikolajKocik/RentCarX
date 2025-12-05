@@ -1,0 +1,79 @@
+using Microsoft.Extensions.Logging;
+using RentCarX.Domain.Interfaces.Services.Stripe;
+using Stripe;
+
+namespace RentCarX.Infrastructure.Services.Stripe;
+
+public class StripeWebhookHandlerImplementation : IStripeWebhookHandler
+{
+    private readonly ILogger<StripeWebhookHandlerImplementation> _logger;
+    private readonly IPaymentService _paymentService;
+
+    public StripeWebhookHandlerImplementation(
+        ILogger<StripeWebhookHandlerImplementation> logger,
+        IPaymentService paymentService)
+    {
+        _logger = logger;
+        _paymentService = paymentService;
+    }
+
+    public async Task HandleEventAsync(Event stripeEvent, CancellationToken cancellationToken = default)
+    {
+        if (stripeEvent is null) return;
+
+        _logger.LogInformation("Handling Stripe event: {Type}", stripeEvent.Type);
+
+        switch (stripeEvent.Type)
+        {
+            case "checkout.session.completed":
+                // already handled in controller
+                break;
+
+            case "charge.refunded":
+            case "charge.dispute.closed":
+            case "refund.updated":
+            case "refund.succeeded":
+                try
+                {
+                    var refund = stripeEvent.Data.Object as Refund;
+                    if (refund is not null)
+                    {
+                        object? chargeObj = refund.Charge;
+                        string? chargeId = null;
+
+                        if (chargeObj is string s)
+                        {
+                            chargeId = s;
+                        }
+                        else if (chargeObj is Charge c)
+                        {
+                            chargeId = c.Id;
+                        }
+                        else
+                        {
+                            chargeId = chargeObj?.ToString();
+                        }
+
+                        long amount = refund.Amount;
+                        string currency = refund.Currency;
+
+                        await _paymentService.HandleRefundSucceededAsync(
+                            refund.Id,
+                            chargeId,
+                            amount, 
+                            currency,
+                            cancellationToken);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error handling refund event");
+                }
+                break;
+
+            default:
+                _logger.LogInformation("Unhandled Stripe event type: {Type}", stripeEvent.Type);
+                break;
+        }
+    }
+}
