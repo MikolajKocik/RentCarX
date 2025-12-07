@@ -7,20 +7,22 @@ namespace RentCarX.Application.Services.ReportingService;
 
 public sealed class ExcelReport : IReportingService
 {
-    private readonly ReportHelper _reportHelper;
+    private readonly IReportingConfiguration _reportHelper;
 
-    public ExcelReport(ReportHelper helper)
+    public ExcelReport(IReportingConfiguration helper)
     {
         _reportHelper = helper;
     }
 
-    public async Task GenerateReport(CancellationToken ct)
+    public DocumentReport DocumentReport => DocumentReport.Xlsx;
+
+    public async Task<byte[]> GenerateReport(CancellationToken ct)
     {
         var reportData = await _reportHelper.SetReport(ct);
 
         using(var workbook = new XLWorkbook())
         {
-            var worksheet = workbook.Worksheets.Add($"RentCarX Sales Report");
+            IXLWorksheet worksheet = workbook.Worksheets.Add($"RentCarX Sales Report");
 
             // adding headers
             worksheet.Cell("A1").Value = "CarId";
@@ -63,6 +65,7 @@ public sealed class ExcelReport : IReportingService
             {
                 await Task.Run(() => workbook.SaveAs(filePath));
                 Debug.Assert(File.Exists(filePath), $"[DEV] File was not created at path: {filePath}");
+                return File.ReadAllBytesAsync(filePath).Result;
             }
             catch (Exception ex)
             {

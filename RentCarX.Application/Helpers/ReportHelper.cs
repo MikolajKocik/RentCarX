@@ -1,16 +1,12 @@
 ﻿using RentCarX.Application.DTOs.Car;
+using RentCarX.Application.Interfaces.Services.Reports;
 using RentCarX.Domain.Interfaces.Repositories;
 using RentCarX.Domain.Models;
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RentCarX.Application.Helpers;
 
-public sealed class ReportHelper
+public sealed class ReportHelper : IReportingConfiguration
 {
     private readonly ICarRepository _carRepository;
 

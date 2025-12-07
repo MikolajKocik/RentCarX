@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Options;
 using RentCarX.Application.Helpers;
 using RentCarX.Application.Interfaces.Services.NotificationStrategy;
+using RentCarX.Application.Services.NotificationService.Settings;
 using RentCarX.Domain.Interfaces.UserContext;
 
 namespace RentCarX.Application.Services.NotificationService;
@@ -11,7 +12,7 @@ public sealed class AzureNotificationSender : INotificationSender
     private readonly NotificationHubClient _hubClient;
     private readonly IUserContextService _userContextService;
     public AzureNotificationSender(
-        IOptions<Settings.NotificationHubSettings> settings,
+        IOptions<NotificationHub> settings,
         IUserContextService userContextService
         )
     {

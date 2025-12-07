@@ -1,24 +1,24 @@
-﻿using QuestPDF.Fluent;
+﻿using MediatR;
+using QuestPDF.Fluent;
 using QuestPDF.Helpers;
-using RentCarX.Application.DTOs.Car;
 using RentCarX.Application.Helpers;
 using RentCarX.Application.Interfaces.Services.Reports;
-using RentCarX.Domain.Interfaces.Repositories;
-using System.Collections.Concurrent;
 using System.Diagnostics;
 
 namespace RentCarX.Application.Services.ReportingService;
 
 public sealed class PdfReport : IReportingService
 {
-    private readonly ReportHelper _reportHelper;
+    private readonly IReportingConfiguration _reportHelper;
 
-    public PdfReport(ReportHelper helper)
+    public PdfReport(IReportingConfiguration helper)
     {
         _reportHelper = helper;
     }
 
-    public async Task GenerateReport(CancellationToken ct)
+    public DocumentReport DocumentReport => DocumentReport.Pdf;
+
+    public async Task<byte[]> GenerateReport(CancellationToken ct)
     {
         var reportData = await _reportHelper.SetReport(ct);
 
@@ -86,6 +86,7 @@ public sealed class PdfReport : IReportingService
             Debug.WriteLine("Preparing to generate the pdf file...");
             await Task.Run(() => document.GeneratePdf(filePath));
             Debug.Assert(File.Exists(filePath), $"[DEV] File was not created at path: {filePath}");
+            return File.ReadAllBytesAsync(filePath).Result;
         }
         catch (Exception ex)
         {
