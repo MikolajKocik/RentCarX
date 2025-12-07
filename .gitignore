@@ -14,6 +14,7 @@
 *.csproj.user
 .vs/
 
+*apsettings.json
 *apsettings.Production.json
 *apsettings.Development.json
 *.log
