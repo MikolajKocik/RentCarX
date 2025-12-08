@@ -66,9 +66,12 @@ namespace RentCarX.Presentation.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)] 
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<ForgotPasswordResponseDto>> ForgotPassword([FromBody] string email)
+        public async Task<ActionResult<ForgotPasswordResponseDto>> ForgotPassword([FromBody] ForgotPasswordRequest request)
         {
-            var command = new ForgotPasswordCommand(email);
+            if (request is null || string.IsNullOrWhiteSpace(request.Email))
+                return BadRequest("Invalid request");
+
+            var command = new ForgotPasswordCommand(request.Email);
             var result = await _mediator.Send(command);
 
             return Ok(result);
@@ -83,5 +86,8 @@ namespace RentCarX.Presentation.Controllers
             var success = await _mediator.Send(command);
             return success ? Ok("Password has been reset") : BadRequest("Invalid reset attempt");
         }
+
+        public sealed record ConfirmEmailRequest(Guid UserId, string Token);
+        public sealed record ForgotPasswordRequest(string Email);
     }
 }

@@ -6,48 +6,57 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Identity;
 
-namespace RentCarX.Infrastructure.Services.JWT
+namespace RentCarX.Infrastructure.Services.JWT;
+
+public class JwtTokenService : IJwtTokenService
 {
-    public class JwtTokenService : IJwtTokenService
+    private readonly IConfiguration _config;
+    private readonly UserManager<User> _userManager;
+
+    public JwtTokenService(IConfiguration config, UserManager<User> userManager)
     {
-        private readonly IConfiguration _config;
-        private readonly UserManager<User> _userManager; 
+        _config = config;
+        _userManager = userManager;
+    }
 
-        public JwtTokenService(IConfiguration config, UserManager<User> userManager) 
+    public async Task<string> GenerateToken(User user)
+    {
+        if (user == null)
+            throw new ArgumentNullException(nameof(user));
+
+        if (string.IsNullOrWhiteSpace(_config["Jwt:Key"]))
+            throw new InvalidOperationException("JWT secret (Jwt:Key) is not configured.");
+
+        var claims = new List<Claim>
         {
-            _config = config;
-            _userManager = userManager;
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
+            new Claim(ClaimTypes.Name, user.UserName ?? string.Empty)
+        };
+
+        var roles = await _userManager.GetRolesAsync(user);
+        foreach (var role in roles)
+        {
+            claims.Add(new Claim(ClaimTypes.Role, role));
         }
 
-        public async Task<string> GenerateToken(User user)
-        {
-            if (user.Email is null || user.UserName is null)
-                throw new ArgumentNullException(nameof(user), "User cannot be null when generating JWT.");
+        var keyBytes = Encoding.UTF8.GetBytes(_config["Jwt:Key"]!);
+        var key = new SymmetricSecurityKey(keyBytes);
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-            var claims = new List<Claim> 
-            {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()), 
-                new Claim(ClaimTypes.Email, user.Email), 
-                new Claim(ClaimTypes.Name, user.UserName) 
-            };
+        var issuer = _config["Jwt:Issuer"];
+        var audience = _config["Jwt:Audience"];
 
-            var roles = await _userManager.GetRolesAsync(user);
-            foreach (var role in roles)
-            {
-                claims.Add(new Claim(ClaimTypes.Role, role));
-            }
+        var expires = DateTime.UtcNow.AddHours(12);
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-            var token = new JwtSecurityToken(
-                issuer: _config["Jwt:Issuer"],
-                audience: _config["Jwt:Audience"],
-                claims: claims, 
-                expires: DateTime.Now.AddHours(12), 
-                signingCredentials: creds
-            );
+        var token = new JwtSecurityToken(
+            issuer: issuer,
+            audience: audience,
+            claims: claims,
+            expires: expires,
+            signingCredentials: creds
+        );
 
-            return new JwtSecurityTokenHandler().WriteToken(token); 
-        }
+        return new JwtSecurityTokenHandler().WriteToken(token);
     }
 }

@@ -18,7 +18,7 @@ namespace RentCarX.Presentation.Controllers
     [ApiController]
     [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/reservations")]
-    [Authorize]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public sealed class ReservationController : ControllerBase
@@ -65,7 +65,7 @@ namespace RentCarX.Presentation.Controllers
             return Ok(reservation);
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [HttpGet("all")]
         [ProducesResponseType(StatusCodes.Status200OK)] 
         [ProducesResponseType(StatusCodes.Status403Forbidden)] 
