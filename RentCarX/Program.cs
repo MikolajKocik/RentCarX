@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using RentCarX.Application.Extensions;
+using RentCarX.HangfireWorker.Extensions;
 using RentCarX.Infrastructure.Data;
 using RentCarX.Infrastructure.Extensions;
 using RentCarX.Infrastructure.Helpers.Development;
@@ -24,14 +25,8 @@ string connectionString = builder.Environment.IsDevelopment()
     : AzureSqlConfiguration.GetConnectionString(builder.Configuration);
 Debug.WriteLine(connectionString);
 
-//----------
-var testValue = builder.Configuration.GetSection("NotificationHub")["ConnectionString"];
-
-Debug.WriteLine($"Notification Hub Test: {testValue}");
-//----------
-
 builder.Services.AddInfrastructure(builder.Configuration, builder.Environment, connectionString);
-
+builder.Services.AddHangfireWorker(builder.Configuration, connectionString);
 builder.Services.AddApplication(builder.Configuration);
 
 builder.AddPresentation();
@@ -73,6 +68,12 @@ else
 }
 
 var app = builder.Build();
+
+app.Use((context, next) =>
+{
+    context.Request.EnableBuffering();
+    return next();
+});
 
 Console.WriteLine($"App Environment Name: {app.Environment.EnvironmentName}");
 

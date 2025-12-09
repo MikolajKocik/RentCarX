@@ -45,7 +45,7 @@ namespace RentCarX.Presentation.Controllers
         public async Task<IActionResult> CreateReservation([FromBody] CreateReservationCommand command, CancellationToken cancellationToken)
         {
             var id = await _mediator.Send(command, cancellationToken);
-            return CreatedAtAction(nameof(GetById), new { }, id);
+            return CreatedAtAction(nameof(GetById), new { id = id }, id);
         }
 
         [HttpGet("my-reservations")]

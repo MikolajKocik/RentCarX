@@ -1,30 +1,54 @@
-﻿using MediatR;
-using RentCarX.Domain.Interfaces.Repositories; 
-
+﻿using AutoMapper;
+using MediatR;
 using RentCarX.Application.CQRS.Commands.Car.AddCar;
-using AutoMapper;
+using RentCarX.Domain.Interfaces.Repositories;
+using Stripe;
 
-namespace RentCarX.Application.CQRS.Commands.Car.CreateCar
+namespace RentCarX.Application.CQRS.Commands.Car.CreateCar;
+
+public class CreateCarCommandHandler : IRequestHandler<CreateCarCommand, Guid>
 {
-    public class CreateCarCommandHandler : IRequestHandler<CreateCarCommand, Guid>
+    private readonly ICarRepository _carRepository;
+    private readonly IMapper _mapper;
+    private readonly ProductService _productService;
+
+
+    public CreateCarCommandHandler(
+        ICarRepository carRepository,
+        IMapper mapper,
+        ProductService productService
+        )
     {
-        private readonly ICarRepository _carRepository;
-        private readonly IMapper _mapper;
+        _carRepository = carRepository;
+        _mapper = mapper;
+        _productService = productService;
+    }
 
-        public CreateCarCommandHandler(ICarRepository carRepository, IMapper mapper)
+    public async Task<Guid> Handle(CreateCarCommand request, CancellationToken cancellationToken)
+    {
+        var productOptions = new ProductCreateOptions
         {
-            _carRepository = carRepository;
-            _mapper = mapper;
-        }
+            Name = $"{request.CarData.Brand} {request.CarData.Model} ({request.CarData.Year})",
+            Description = $"Rental for {request.CarData.Brand} {request.CarData.Model}",
+            DefaultPriceData = new ProductDefaultPriceDataOptions
+            {
+                UnitAmountDecimal = request.CarData.PricePerDay * 100,
+                Currency = "pln",
+            },
+        };
 
-        public async Task<Guid> Handle(CreateCarCommand request, CancellationToken cancellationToken)
-        {
-            var car = _mapper.Map<RentCarX.Domain.Models.Car>(request.CarData);
-            car.Id = Guid.NewGuid();
+        // stripe product
+        Product product = await _productService.CreateAsync(productOptions, cancellationToken: cancellationToken);
 
-            await _carRepository.CreateAsync(car, cancellationToken);
+        var car = _mapper.Map<RentCarX.Domain.Models.Car>(request.CarData);
+        car.Id = Guid.NewGuid();
 
-            return car.Id;
-        }
+        // Assign the new Stripe IDs to the car object
+        car.StripeProductId = product.Id;
+        car.StripePriceId = product.DefaultPriceId;  
+
+        await _carRepository.CreateAsync(car, cancellationToken);
+
+        return car.Id;
     }
 }

@@ -52,12 +52,12 @@ public class CreateReservationCommandHandler : IRequestHandler<CreateReservation
     {
         _logger.LogInformation("CreateReservation requested for CarId={CarId}, Start={Start}, End={End}", request.CarId, request.StartDate, request.EndDate);
 
-            var car = await _carRepository.GetCarByIdAsync(request.CarId, cancellationToken);
-            if (car is null)
-            {
-                _logger.LogWarning("Car with id {CarId} was not found by repository.", request.CarId);
-                throw new NotFoundException("Car not found", request.CarId.ToString());
-            }
+        var car = await _carRepository.GetCarByIdAsync(request.CarId, cancellationToken);
+        if (car is null)
+        {
+            _logger.LogWarning("Car with id {CarId} was not found by repository.", request.CarId);
+            throw new NotFoundException("Car not found", request.CarId.ToString());
+        }
 
         using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
 
@@ -102,11 +102,11 @@ public class CreateReservationCommandHandler : IRequestHandler<CreateReservation
 
             var tasks = new List<Task>();
 
-            if (_flags.UseAzureNotifications)
-            {
-                INotificationSender azureNotificationHub = _senders.First(s => s.StrategyName.Equals(NotificationStrategyOptions.Azure));
-                tasks.Add(azureNotificationHub.SendNotificationAsync(subject, messageBody, cancellationToken, _userContext.Email));
-            }
+            //if (_flags.UseAzureNotifications)
+            //{
+            //    INotificationSender azureNotificationHub = _senders.First(s => s.StrategyName.Equals(NotificationStrategyOptions.Azure));
+            //    tasks.Add(azureNotificationHub.SendNotificationAsync(subject, messageBody, cancellationToken, _userContext.Email));
+            //}
 
             if (_flags.UseSmtpProtocol)
             {

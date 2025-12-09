@@ -19,10 +19,26 @@ services:
       - AzureSqlConnection__UserID=${USER_ID}
       - AzureSqlConnection__Password=${PASSWORD}
       - AzureSqlConnection__InitialCatalog=${INITIAL_CATALOG}
-     # ---
-      - Stripe__SecretKey=${STRIPE_SECRET_KEY}
-      - Stripe__PublishableKey=${STRIPE_PUBLISHABLE_KEY}
-      - Stripe__WebhookSecret=${WEBHOOK}
+     # feature flag management 
+      - Feature__flag__payments=${FEATURE_FLAG_PAYMENTS}
+      - Feature__flag__reports=${FEATURE_FLAG_REPORTS}
+      - Feature__flag__ns=${FEATURE_FLAG_NS}
+      - Feature__flag__smtp=${FEATURE_FLAG_SMTP}
+     # Json web token
+      - Jwt__key=${JWT_KEY}
+      - Jwt__issuer=${JWT_ISSUER}
+      - Jwt__audience=${JWT_AUDIENCE}
+     # SMTP
+      - Smtp__server=${SMTP_SERVER}
+      - Smtp__port=${SMTP_PORT}
+      - Smtp__sender__name=${SMTP_SENDER_NAME}
+      - Smtp__sender__email=${SMTP_SENDER_EMAIL}
+      - Smtp__usernam=${SMTP_USERNAME}
+      - Smtp__pass=${SMTP_PASS}
+      - Smtp__enable__ssl=${SMTP_ENABLE_SSL}
+     # NS
+      - Notification__conn=${NOTIFICATION_CONN}
+      - Hub__name=${HUB_NAME}
     networks: 
       - rentcarx-dev
     ports: 
@@ -78,10 +94,6 @@ services:
       - AzureSqlConnection__UserID=${USER_ID}
       - AzureSqlConnection__Password=${PASSWORD}
       - AzureSqlConnection__InitialCatalog=${INITIAL_CATALOG}
-      # ---
-      - Stripe__SecretKey=${STRIPE_SECRET_KEY}
-      - Stripe__PublishableKey=${STRIPE_PUBLISHABLE_KEY}
-      - Stripe__WebhookSecret=${WEBHOOK}
     volumes:
       - ./RentCarX/appsettings.Development.json:/app/appsettings.Development.json:ro
     depends_on:
