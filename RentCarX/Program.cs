@@ -2,7 +2,9 @@ using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using RentCarX.Application.Extensions;
+using RentCarX.HangfireWorker.Extensions;
 using RentCarX.Infrastructure.Data;
 using RentCarX.Infrastructure.Extensions;
 using RentCarX.Infrastructure.Helpers.Development;
@@ -24,7 +26,7 @@ string connectionString = builder.Environment.IsDevelopment()
 Debug.WriteLine(connectionString);
 
 builder.Services.AddInfrastructure(builder.Configuration, builder.Environment, connectionString);
-
+builder.Services.AddHangfireWorker(builder.Configuration, connectionString);
 builder.Services.AddApplication(builder.Configuration);
 
 builder.AddPresentation();
@@ -67,6 +69,12 @@ else
 
 var app = builder.Build();
 
+app.Use((context, next) =>
+{
+    context.Request.EnableBuffering();
+    return next();
+});
+
 Console.WriteLine($"App Environment Name: {app.Environment.EnvironmentName}");
 
 // serilog
@@ -103,26 +111,40 @@ if (app.Environment.IsDevelopment())
 
 app.MapControllers();
 
-// auto-migrating
-using (var scope = app.Services.CreateScope())
+if (app.Environment.IsDevelopment() || app.Environment.IsStaging())
 {
-    var dbContext = scope.ServiceProvider
-        .GetRequiredService<RentCarX_DbContext>();
-
-    try
+    // auto-migrating
+    using (IServiceScope scope = app.Services.CreateScope())
     {
-        var pendingMigrations = dbContext.Database.GetPendingMigrations();
+        var dbContext = scope.ServiceProvider
+            .GetRequiredService<RentCarX_DbContext>();
 
-        if (pendingMigrations.Any())
+        try
         {
-            dbContext.Database.Migrate();
+            IEnumerable<string> pendingMigrations = dbContext.Database.GetPendingMigrations();
+
+            if (pendingMigrations.Any())
+            {
+                dbContext.Database.Migrate();
+            }
+
+            IOptions<IdentityAdminRole> role = scope.ServiceProvider.GetRequiredService<IOptions<IdentityAdminRole>>();
+            var admin = role?.Value;
+
+            string email = admin?.Email ?? string.Empty;
+            string password = admin?.Password ?? string.Empty;
+            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
+                throw new ArgumentNullException("Roles are not configurated for admin account");
+
+            await IdentitySeeder.SeedUserAsync(scope.ServiceProvider);
+            await IdentitySeeder.SeedAdminAsync(scope.ServiceProvider, email, password);
         }
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine("Migration ERROR");
-        Console.WriteLine(ex.ToString());
-        throw;
+        catch (Exception ex)
+        {
+            var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+            logger.LogError(ex, "Migration/Seed ERROR");
+            throw;
+        }
     }
 }
 

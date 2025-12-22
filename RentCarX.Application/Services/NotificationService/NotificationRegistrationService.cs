@@ -11,7 +11,7 @@ public sealed class NotificationRegistrationService : INotificationRegister
 {
     private readonly NotificationHubClient _hubClient;
 
-    public NotificationRegistrationService(IOptions<Settings.NotificationHubSettings> settings)
+    public NotificationRegistrationService(IOptions<Settings.NotificationHub> settings)
     {
         // the same client, who is sending the messages
         _hubClient = NotificationHubClient.CreateClientFromConnectionString(

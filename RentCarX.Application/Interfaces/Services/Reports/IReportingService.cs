@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using RentCarX.Application.Services.ReportingService;
 
 namespace RentCarX.Application.Interfaces.Services.Reports;
 
 public interface IReportingService
-{
-    Task GenerateReport(CancellationToken ct);
+{   
+    public DocumentReport DocumentReport { get; }
+    Task<byte[]> GenerateReport(CancellationToken ct);
 }

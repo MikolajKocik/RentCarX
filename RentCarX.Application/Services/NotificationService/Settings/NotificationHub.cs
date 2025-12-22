@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace RentCarX.Application.Services.NotificationService.Settings;
 
-public sealed class NotificationHubSettings
+public sealed class NotificationHub
 {
     public string ConnectionString { get; set; } = string.Empty;
     public string HubName { get; set; } = string.Empty;

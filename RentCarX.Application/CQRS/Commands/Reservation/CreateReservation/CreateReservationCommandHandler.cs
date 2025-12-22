@@ -9,6 +9,7 @@ using RentCarX.Domain.Exceptions;
 using RentCarX.Domain.Interfaces.DbContext;
 using RentCarX.Domain.Interfaces.Repositories;
 using RentCarX.Domain.Interfaces.UserContext;
+using Microsoft.Extensions.Logging;
 
 namespace RentCarX.Application.CQRS.Commands.Reservation.CreateReservation;
 
@@ -22,6 +23,7 @@ public class CreateReservationCommandHandler : IRequestHandler<CreateReservation
     private readonly IJobScheduler _jobScheduler;
     private readonly IRentCarX_DbContext _context;
     private readonly ReservationQueueWorker _reservationQueue;
+    private readonly ILogger<CreateReservationCommandHandler> _logger;
 
     public CreateReservationCommandHandler(
         IReservationRepository reservationRepository,
@@ -31,7 +33,8 @@ public class CreateReservationCommandHandler : IRequestHandler<CreateReservation
         IOptions<NotificationFeatureFlags> flags,
         IJobScheduler jobScheduler,
         IRentCarX_DbContext context,
-        ReservationQueueWorker reservationQueue
+        ReservationQueueWorker reservationQueue,
+        ILogger<CreateReservationCommandHandler> logger
         )
     {
         _reservationRepository = reservationRepository;
@@ -42,18 +45,25 @@ public class CreateReservationCommandHandler : IRequestHandler<CreateReservation
         _jobScheduler = jobScheduler;
         _context = context;
         _reservationQueue = reservationQueue;
+        _logger = logger;
     }
 
     public async Task<Guid> Handle(CreateReservationCommand request, CancellationToken cancellationToken)
     {
-        using var transaction = _context.Database.BeginTransaction();
+        _logger.LogInformation("CreateReservation requested for CarId={CarId}, Start={Start}, End={End}", request.CarId, request.StartDate, request.EndDate);
+
+        var car = await _carRepository.GetCarByIdAsync(request.CarId, cancellationToken);
+        if (car is null)
+        {
+            _logger.LogWarning("Car with id {CarId} was not found by repository.", request.CarId);
+            throw new NotFoundException("Car not found", request.CarId.ToString());
+        }
+
+        using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
 
         try
         {
-            var car = await _carRepository.GetCarByIdAsync(request.CarId, cancellationToken);
-
-            if (car is null)
-                throw new NotFoundException("Car not found", nameof(car.Id));
+            _logger.LogInformation("Found car {CarId} - {Brand} {Model}", car.Id, car.Brand, car.Model);
 
             if (!CheckReservation.TryReserveCar(car))
                 throw new BadRequestException("Car not available");
@@ -92,11 +102,11 @@ public class CreateReservationCommandHandler : IRequestHandler<CreateReservation
 
             var tasks = new List<Task>();
 
-            if (_flags.UseAzureNotifications)
-            {
-                INotificationSender azureNotificationHub = _senders.First(s => s.StrategyName.Equals(NotificationStrategyOptions.Azure));
-                tasks.Add(azureNotificationHub.SendNotificationAsync(subject, messageBody, cancellationToken, _userContext.Email));
-            }
+            //if (_flags.UseAzureNotifications)
+            //{
+            //    INotificationSender azureNotificationHub = _senders.First(s => s.StrategyName.Equals(NotificationStrategyOptions.Azure));
+            //    tasks.Add(azureNotificationHub.SendNotificationAsync(subject, messageBody, cancellationToken, _userContext.Email));
+            //}
 
             if (_flags.UseSmtpProtocol)
             {
@@ -113,10 +123,13 @@ public class CreateReservationCommandHandler : IRequestHandler<CreateReservation
 
             await transaction.CommitAsync(cancellationToken);
 
+            _logger.LogInformation("Reservation {ReservationId} created for car {CarId}", reservation.Id, car.Id);
+
             return reservation.Id;
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Error while creating reservation for car {CarId}", request.CarId);
             await transaction.RollbackAsync(cancellationToken);
             throw;
         }

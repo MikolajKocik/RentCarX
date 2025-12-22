@@ -40,9 +40,19 @@ namespace RentCarX.Application.CQRS.Commands.Auth.Register
 
         public async Task<RegisterUserResponseDto> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
         {
-            var userExists = await _userManager.FindByEmailAsync(request.Dto.Email);
-            if (userExists != null)
+            // Validate request
+            if (request?.Dto is null)
+                throw new ArgumentNullException(nameof(request), "Register request cannot be null.");
+
+            // Check user by email
+            var userByEmail = await _userManager.FindByEmailAsync(request.Dto.Email);
+            if (userByEmail != null)
                 throw new ConflictException("User with this email already exists.", $"Email: {request.Dto.Email}");
+
+            // Check user by username
+            var userByName = await _userManager.FindByNameAsync(request.Dto.Username);
+            if (userByName != null)
+                throw new ConflictException("User with this username already exists.", $"Username: {request.Dto.Username}");
 
             var user = new User
             {
@@ -53,17 +63,26 @@ namespace RentCarX.Application.CQRS.Commands.Auth.Register
 
             var createResult = await _userManager.CreateAsync(user, request.Dto.Password);
             if (!createResult.Succeeded)
-                throw new Exception($"Create failed: {string.Join(", ", createResult.Errors.Select(e => e.Description))}");
+            {
+                var errors = string.Join(", ", createResult.Errors.Select(e => e.Description));
+                _logger.LogWarning("Failed to create user {Email}: {Errors}", request.Dto.Email, errors);
+                throw new Exception($"Create failed: {errors}");
+            }
 
-            await _userManager.AddToRoleAsync(user, "User");
+            var addRoleResult = await _userManager.AddToRoleAsync(user, "User");
+            if (!addRoleResult.Succeeded)
+            {
+                var errors = string.Join(", ", addRoleResult.Errors.Select(e => e.Description));
+                _logger.LogWarning("Failed to add role to user {UserId}: {Errors}", user.Id, errors);
+            }
 
-            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            var encodedToken = WebUtility.UrlEncode(token); 
-            // TODO url front-web
+            var emailToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            var encodedToken = WebUtility.UrlEncode(emailToken);
+
+            // frontend url from configuration (fallback provided)
             var frontendUrl = _configuration["FrontendUrl"] ?? "https://yourfrontend.com";
-
             var confirmationUrl = $"{frontendUrl.TrimEnd('/')}/confirm-email?userId={user.Id}&token={encodedToken}";
-            //
+
             try
             {
                 var subject = "RentCarX email address confirmation";
@@ -80,21 +99,28 @@ namespace RentCarX.Application.CQRS.Commands.Auth.Register
 
                 if (_flags.UseSmtpProtocol)
                 {
-                    var smtp = _senders.First(s => s.StrategyName.Equals(NotificationStrategyOptions.Smtp));
-                    await smtp.SendNotificationAsync(subject, body, cancellationToken, user.Email); 
+                    var smtp = _senders.FirstOrDefault(s => s.StrategyName == NotificationStrategyOptions.Smtp);
+                    if (smtp != null)
+                    {
+                        await smtp.SendNotificationAsync(subject, body, cancellationToken, user.Email);
+                        _logger.LogInformation("Confirmation email sent to {Email}", user.Email);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("SMTP notification sender not configured; skipping email send for {Email}", user.Email);
+                    }
                 }
-
-                _logger.LogInformation("Confirmation email sent to {Email}", user.Email);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to send confirmation email to {Email}", user.Email);
             }
 
+            // generate JWT
             var jwtToken = await _jwtService.GenerateToken(user);
 
-            _logger.LogInformation("Generated token: {Token}", token);
-            _logger.LogInformation("Encoded token: {EncodedToken}", encodedToken);
+            // Log helpful info but avoid printing raw confirmation token
+            _logger.LogInformation("Generated JWT for user {UserId}", user.Id);
             _logger.LogInformation("Confirmation link: {Link}", confirmationUrl);
 
             return new RegisterUserResponseDto

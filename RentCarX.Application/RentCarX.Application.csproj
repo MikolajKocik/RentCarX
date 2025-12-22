@@ -7,12 +7,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <Compile Remove="Services\ReportingService\**" />
-	  <EmbeddedResource Remove="Services\ReportingService\**" />
-	  <None Remove="Services\ReportingService\**" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<ProjectReference Include="..\RentCarX.Domain\RentCarX.Domain.csproj" />
 	</ItemGroup>
 

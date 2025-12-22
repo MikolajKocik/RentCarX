@@ -57,7 +57,7 @@ public sealed class ReservationRepository : IReservationRepository
     public async Task<Reservation?> GetReservationByIdAsync(Guid id, CancellationToken cancellationToken)
         => await _context.Reservations
             .Include(r => r.Car)
-            .Include(r => r.UserId)
+            .Include(r => r.User)
             .FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
 
     public async Task<bool> HasOverlappingReservationAsync(Guid carId, DateTime startDate, DateTime endDate, CancellationToken cancellationToken)

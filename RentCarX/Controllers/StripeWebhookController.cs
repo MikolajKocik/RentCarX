@@ -1,8 +1,9 @@
 ﻿using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using RentCarX.Domain.Interfaces.Services.Stripe;
+using RentCarX.Infrastructure.Settings;
 using Stripe;
-using Stripe.Checkout;
 
 namespace RentCarX.Presentation.Controllers
 {
@@ -12,59 +13,67 @@ namespace RentCarX.Presentation.Controllers
     public class StripeWebhookController : ControllerBase
     {
         private readonly ILogger<StripeWebhookController> _logger;
-        private readonly IConfiguration _configuration;
         private readonly IStripeWebhookHandler _stripeWebhookHandler;
-        private readonly IPaymentService _paymentService;
+        private readonly string _endpointSecret;
 
         public StripeWebhookController(
             ILogger<StripeWebhookController> logger,
-            IConfiguration configuration,
-            IStripeWebhookHandler stripeWebhookHandler,
-            IPaymentService paymentService
-            )
+            IOptions<StripeSettings> stripeSettings,
+            IStripeWebhookHandler stripeWebhookHandler)
         {
             _logger = logger;
-            _configuration = configuration;
             _stripeWebhookHandler = stripeWebhookHandler;
-            _paymentService = paymentService;
+            _endpointSecret = stripeSettings.Value.WebhookSecret 
+                ?? throw new ArgumentNullException(nameof(stripeSettings.Value.WebhookSecret), "Stripe Webhook Secret is not configured.");
         }
 
         [HttpPost("webhook")]
+        [Consumes("application/json")]
         public async Task<IActionResult> StripeWebhook(CancellationToken cancellationToken)
         {
-            var json = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
+            // allows body to be read more than once
+            HttpContext.Request.EnableBuffering();
 
-            var endpointSecret = _configuration["Stripe:WebhookSecret"];
+            string json;
+            using (var reader = new StreamReader(HttpContext.Request.Body, leaveOpen: true))
+            {
+                json = await reader.ReadToEndAsync();
+            }
+
+            // reset stream so Stripe can read it again if needed
+            HttpContext.Request.Body.Position = 0;
+
             Event stripeEvent;
-
             try
             {
                 stripeEvent = EventUtility.ConstructEvent(
                     json,
                     Request.Headers["Stripe-Signature"],
-                    endpointSecret
+                    _endpointSecret
                 );
+
+                _logger.LogInformation("Stripe webhook event received: {EventType}", stripeEvent.Type);
+            }
+            catch (StripeException ex)
+            {
+                _logger.LogError(ex, "Stripe webhook signature verification failed.");
+                return BadRequest("Invalid signature");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Webhook signature verification failed.");
-                return BadRequest();
+                _logger.LogError(ex, "Unexpected error while processing webhook.");
+                return StatusCode(500);
             }
 
-            if (stripeEvent.Type == "checkout.session.completed")
+            try
             {
-                var session = stripeEvent.Data.Object as Session;
-
-                var reservationId = session?.Metadata["reservationId"];
-                _logger.LogInformation($"Payment completed for Reservation ID: {reservationId}");
-
-                if (session != null)
-                {
-                    await _paymentService.HandleCheckoutSessionCompletedAsync(session.Id);
-                }
+                await _stripeWebhookHandler.HandleEventAsync(stripeEvent, cancellationToken);
             }
-
-            await _stripeWebhookHandler.HandleEventAsync(stripeEvent, cancellationToken);
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during webhook handling logic.");
+                return Ok();
+            }
 
             return Ok();
         }

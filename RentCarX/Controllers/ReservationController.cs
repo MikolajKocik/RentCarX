@@ -1,5 +1,6 @@
 ﻿using Asp.Versioning;
 using MediatR;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RentCarX.Application.CQRS.Commands.Reservation.CreateReservation;
@@ -9,22 +10,31 @@ using RentCarX.Application.CQRS.Queries.Reservation.GetAll;
 using RentCarX.Application.CQRS.Queries.Reservation.GetById;
 using RentCarX.Application.CQRS.Queries.Reservation.GetMy;
 using RentCarX.Application.DTOs.Reservation;
+using RentCarX.Application.Interfaces.Services.Reports;
+using RentCarX.Application.Services.ReportingService;
 
 namespace RentCarX.Presentation.Controllers
 {
     [ApiController]
     [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/reservations")]
-    [Authorize]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public sealed class ReservationController : ControllerBase
     {
         private readonly IMediator _mediator;
+        private readonly IEnumerable<IReportingService> _reportingService;
+        private readonly ILogger<ReservationController> _logger;
 
-        public ReservationController(IMediator mediator)
+        public ReservationController(
+            IMediator mediator,
+            IEnumerable<IReportingService> reportingService,
+            ILogger<ReservationController> logger)
         {
             _mediator = mediator;
+            _reportingService = reportingService;
+            _logger = logger;
         }
 
         [HttpPost]
@@ -35,7 +45,7 @@ namespace RentCarX.Presentation.Controllers
         public async Task<IActionResult> CreateReservation([FromBody] CreateReservationCommand command, CancellationToken cancellationToken)
         {
             var id = await _mediator.Send(command, cancellationToken);
-            return CreatedAtAction(nameof(GetById), new { }, id);
+            return CreatedAtAction(nameof(GetById), new { id = id }, id);
         }
 
         [HttpGet("my-reservations")]
@@ -55,7 +65,7 @@ namespace RentCarX.Presentation.Controllers
             return Ok(reservation);
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [HttpGet("all")]
         [ProducesResponseType(StatusCodes.Status200OK)] 
         [ProducesResponseType(StatusCodes.Status403Forbidden)] 
@@ -95,6 +105,48 @@ namespace RentCarX.Presentation.Controllers
             string checkoutUrl = await _mediator.Send(new InitiatePaymentCommand(id), cancellationToken);
 
             return Ok(new { checkoutUrl }); 
+        }
+
+        [HttpPost("generate-pdf")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
+        [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GeneratePdfDocument(CancellationToken cancellationToken)
+        {
+            IReportingService? pdf = _reportingService.First(r => r.DocumentReport.Equals(DocumentReport.Pdf));
+            if (pdf is null)
+            {
+                return BadRequest(new { Message = "PDF generator is not registered." });
+            }
+
+            byte[] doc = await pdf.GenerateReport(cancellationToken);
+
+            const string contentType = "application/pdf";
+            const string fileName = "reservations.pdf";
+            return File(doc, contentType, fileName);
+
+        }
+
+        [HttpPost("generate-xlsx")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
+        [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GenerateXlsxDocument(CancellationToken cancellationToken)
+        {
+            IReportingService? xlsx = _reportingService.First(r => r.DocumentReport.Equals(DocumentReport.Xlsx));
+            if (xlsx is null)
+            {
+                _logger.LogWarning("XLSX generator service not found.");
+                return BadRequest(new { Message = "XLSX generator is not registered." });
+            }
+
+            byte[] doc = await xlsx.GenerateReport(cancellationToken);
+
+            const string contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+            const string fileName = "reservations.xlsx";
+            return File(doc, contentType, fileName);
         }
     }
 }

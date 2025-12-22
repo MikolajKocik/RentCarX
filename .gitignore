@@ -14,8 +14,7 @@
 *.csproj.user
 .vs/
 
-*apsettings.Production.json
-*apsettings.Development.json
+/RentCarX/appsettings.json
 *.log
 /RentCarX/appsettings.Production.json
 /RentCarX/appsettings.Development.json

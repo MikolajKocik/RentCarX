@@ -1,12 +1,17 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using RentCarX.Infrastructure.Helpers.Development;
+using RentCarX.Infrastructure.Settings;
 
 namespace RentCarX.Infrastructure.Data 
 {
-    public class RentCarX_DbContextFactory : IDesignTimeDbContextFactory<RentCarX_DbContext>
+    public sealed class RentCarX_DbContextFactory : IDesignTimeDbContextFactory<RentCarX_DbContext>
     {
+        public RentCarX_DbContextFactory() { }
+
         public RentCarX_DbContext CreateDbContext(string[] args)
         {
             // Configuration design-time due to environment variables not being available
@@ -19,12 +24,15 @@ namespace RentCarX.Infrastructure.Data
                 .Build();
 
             var optionsBuilder = new DbContextOptionsBuilder<RentCarX_DbContext>();
-
             string connectionString = ConnectionString.GetConnectionString(configuration);
-
             optionsBuilder.UseSqlServer(connectionString);
 
-            return new RentCarX_DbContext(optionsBuilder.Options);
+            var adminRoleSettings = configuration.GetSection("IdentityAdminRole").Get<IdentityAdminRole>() 
+                ?? new IdentityAdminRole { Password = "DefaultPasswordForMigration" };
+
+            IOptions<IdentityAdminRole> adminRoleOptions = Options.Create(adminRoleSettings);
+
+            return new RentCarX_DbContext(optionsBuilder.Options, adminRoleOptions);
         }
     }
 }
