@@ -59,7 +59,7 @@ namespace RentCarX.Presentation.Controllers
         public async Task<IActionResult> ConfirmEmail([FromQuery] Guid userId, [FromQuery] string token)
         {
             var result = await _mediator.Send(new ConfirmEmailCommand(userId, token));
-            return result ? Ok("Email confirmed") : BadRequest("Confirmation failed");
+            return Ok($"Result: {result}");
         }
 
         [HttpPost("forgot-password")]
