@@ -10,7 +10,7 @@ namespace RentCarX.Domain.Models.Stripe
     {
         public int Id { get; set; }
         public string StripeCustomerId { get; set; } = string.Empty;
-        public Guid UserId { get; set; } 
+        public Guid? UserId { get; set; } 
         public User? User { get; set; }
 
     }

@@ -21,7 +21,7 @@ namespace RentCarX.Domain.Models.Stripe
         public DateTime? SucceededAt { get; set; }
         public DateTime? RefundedAt { get; set; }
 
-        public Guid UserId { get; set; }
+        public Guid? UserId { get; set; }
         public User? User { get; set; }
 
         public Guid? ReservationId { get; set; }
