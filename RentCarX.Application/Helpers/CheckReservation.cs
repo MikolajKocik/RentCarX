@@ -17,7 +17,6 @@ public static class CheckReservation
     // parallel atomic operation
     public static bool TryReserveCar(Car car)
     {
-        // if not reserved change to reserved with flag and return a result before
-        return Interlocked.CompareExchange(ref car.IsAvailableFlag, 0, 1) == 1;
+        return car.TryReserve();
     }
 }
