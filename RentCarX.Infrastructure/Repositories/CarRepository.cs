@@ -17,7 +17,10 @@ public sealed class CarRepository : ICarRepository
     public async Task UpdateAvailabilityForCarsAsync(IEnumerable<Guid> carIds, bool isAvailable, CancellationToken cancellationToken)
         => await _context.Cars
             .Where(c => carIds.Contains(c.Id))
-            .ExecuteUpdateAsync(s => s.SetProperty(c => c.IsAvailableFlag == 1, isAvailable), cancellationToken);
+            .ExecuteUpdateAsync(s => s.SetProperty(
+                c => c.IsAvailableFlag,
+                isAvailable ? 1 : 0)
+            , cancellationToken);
 
     public async Task CreateAsync(Car car, CancellationToken cancellation)
     {

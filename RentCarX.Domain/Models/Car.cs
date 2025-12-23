@@ -2,6 +2,8 @@
 {
     public sealed class Car
     {
+        private int _isAvailableFlag = 1;
+
         public Guid Id { get; set; }
         public string Brand { get; set; } = default!;
         public string Model { get; set; } = default!;
@@ -10,12 +12,20 @@
         public decimal PricePerDay { get; set; }
 
         // 1 = true | 0 = false
-        public int IsAvailableFlag = 1;
+        public int IsAvailableFlag
+        {
+            get => this._isAvailableFlag;
+            set => this._isAvailableFlag = value;
+        }
 
         // Stripe integration
         public string? StripeProductId { get; set; }
         public string? StripePriceId { get; set; }
 
         public List<Reservation> Reservations { get; set; } = new();
+
+        // if not reserved change to reserved with flag and return a result before
+        public bool TryReserve()
+            => Interlocked.CompareExchange(ref _isAvailableFlag, 0, 1) == 1;
     }
 }
