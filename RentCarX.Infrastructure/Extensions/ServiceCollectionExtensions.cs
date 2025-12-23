@@ -48,6 +48,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ICarRepository, CarRepository>();
         services.AddScoped<IReservationRepository, ReservationRepository>();
         services.AddScoped<IPaymentRepository, PaymentRepository>();
+        services.AddScoped<IUserRepository, UserRepository>();
 
         services.AddScoped<IRentCarX_DbContext, RentCarX_DbContext>();
 

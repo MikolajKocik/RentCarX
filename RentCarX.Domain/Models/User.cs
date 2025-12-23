@@ -8,6 +8,9 @@ public sealed class User : IdentityUser<Guid>
 
     public User() : base() { }
 
+    public bool IsDeleted { get; set; } = false;
+    public DateTime? DeletedAt { get; set; }
+
     public StripeCustomer? StripeCustomer { get; set; }
     public ICollection<Payment>? Payments { get; set; }
 }

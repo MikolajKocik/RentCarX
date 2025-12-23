@@ -23,7 +23,7 @@ namespace RentCarX.Infrastructure.Data
         public override DbSet<User> Users { get; set; }
 
         public RentCarX_DbContext(DbContextOptions<RentCarX_DbContext> options, IOptions<IdentityAdminRole> adminRole)
-        : base(options) 
+        : base(options)
         {
             _adminRole = adminRole.Value;
         }
@@ -45,10 +45,14 @@ namespace RentCarX.Infrastructure.Data
             modelBuilder.Entity<Reservation>()
                 .HasQueryFilter(f => !f.IsDeleted);
 
+            // query filter for soft deleted users
+            modelBuilder.Entity<User>()
+                .HasQueryFilter(u => !u.IsDeleted);
+
             // assembly reference to all configurations classes in solution
             modelBuilder.ApplyConfigurationsFromAssembly(this.GetType().Assembly);
 
-            // seed admin role
+            #region SeedAdminRole
             Guid adminRoleId = new Guid("99000000-0000-0000-0000-00000000AAAA");
             Guid adminUserId = new Guid("99000000-0000-0000-0000-00000000DDDD");
 
@@ -64,7 +68,7 @@ namespace RentCarX.Infrastructure.Data
             var hasher = new PasswordHasher<User>();
 
             modelBuilder.Entity<User>().HasData(
-                new IdentityUser<Guid>
+                new User 
                 {
                     Id = adminUserId,
                     UserName = "admin@rentcarx.com",
@@ -73,7 +77,8 @@ namespace RentCarX.Infrastructure.Data
                     NormalizedEmail = "ADMIN@RENTCARX.COM",
                     EmailConfirmed = true,
                     PasswordHash = hasher.HashPassword(null, _adminRole.Password),
-                    SecurityStamp = Guid.NewGuid().ToString()
+                    SecurityStamp = Guid.NewGuid().ToString(),
+                    IsDeleted = false 
                 }
             );
 
@@ -84,6 +89,7 @@ namespace RentCarX.Infrastructure.Data
                     UserId = adminUserId
                 }
             );
+            #endregion
         }
     }
 }
