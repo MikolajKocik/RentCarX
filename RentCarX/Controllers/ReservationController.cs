@@ -37,7 +37,7 @@ namespace RentCarX.Presentation.Controllers
             _logger = logger;
         }
 
-        [HttpPost]
+        [HttpPost("new")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)] 
         [ProducesResponseType(StatusCodes.Status404NotFound)] 
@@ -56,17 +56,17 @@ namespace RentCarX.Presentation.Controllers
             return Ok(reservations);
         }
 
+        [HttpGet("{id:guid}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [HttpGet("{id:guid}")]
         public async Task<ActionResult<ReservationDto>> GetById(Guid id, CancellationToken cancellationToken)
         {
             ReservationDto reservation = await _mediator.Send(new GetReservationByIdQuery(id), cancellationToken);
             return Ok(reservation);
         }
 
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [HttpGet("all")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [ProducesResponseType(StatusCodes.Status200OK)] 
         [ProducesResponseType(StatusCodes.Status403Forbidden)] 
         public async Task<ActionResult<List<ReservationDto>>> GetAll(CancellationToken cancellationToken)
@@ -75,10 +75,10 @@ namespace RentCarX.Presentation.Controllers
             return Ok(result);
         }
 
+        [HttpDelete("{id:guid}/delete/soft")] // soft-delete approach
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [HttpDelete("{id:guid}/delete/soft")] // soft-delete approach
         public async Task<IActionResult> SoftDeleteReservation(Guid id, CancellationToken cancellationToken)
         {
             var delete = await _mediator.Send(new SoftDeleteReservationCommand(id), cancellationToken);
@@ -86,10 +86,10 @@ namespace RentCarX.Presentation.Controllers
 
         }
 
+        [HttpDelete("{id:guid}/delete")]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [HttpDelete("{id:guid}/delete")] 
         public async Task<IActionResult> DeleteReservation(Guid id, CancellationToken cancellationToken)    
         {
             var delete = await _mediator.Send(new SoftDeleteReservationCommand(id), cancellationToken);
