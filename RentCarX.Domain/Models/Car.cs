@@ -12,10 +12,17 @@
         public decimal PricePerDay { get; set; }
 
         // 1 = true | 0 = false
+        [System.Text.Json.Serialization.JsonIgnore]
         public int IsAvailableFlag
         {
             get => this._isAvailableFlag;
             set => this._isAvailableFlag = value;
+        }
+
+        public bool IsAvailable
+        {
+            get => IsAvailableFlag == 1;
+            set => IsAvailableFlag = value ? 1 : 0;
         }
 
         // Stripe integration

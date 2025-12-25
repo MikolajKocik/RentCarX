@@ -28,6 +28,7 @@ namespace RentCarX.Application.CQRS.Queries.Car.GetDetails
                 Year = car.Year,
                 FuelType = car.FuelType,
                 PricePerDay = car.PricePerDay,
+                IsAvailable = car.IsAvailable
             };
 
             return carDto;
