@@ -111,15 +111,17 @@ if (app.Environment.IsDevelopment())
 
 app.MapControllers();
 
-if (app.Environment.IsDevelopment() || app.Environment.IsStaging())
-{
-    // auto-migrating
-    using (IServiceScope scope = app.Services.CreateScope())
-    {
-        var dbContext = scope.ServiceProvider
-            .GetRequiredService<RentCarX_DbContext>();
 
-        try
+// auto-migrating
+using (IServiceScope scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider
+        .GetRequiredService<RentCarX_DbContext>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+    try
+    {
+        if (app.Environment.IsDevelopment() || app.Environment.IsStaging())
         {
             IEnumerable<string> pendingMigrations = dbContext.Database.GetPendingMigrations();
 
@@ -127,24 +129,31 @@ if (app.Environment.IsDevelopment() || app.Environment.IsStaging())
             {
                 dbContext.Database.Migrate();
             }
-
-            IOptions<IdentityAdminRole> role = scope.ServiceProvider.GetRequiredService<IOptions<IdentityAdminRole>>();
-            var admin = role?.Value;
-
-            string email = admin?.Email ?? string.Empty;
-            string password = admin?.Password ?? string.Empty;
-            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
-                throw new ArgumentNullException("Roles are not configurated for admin account");
-
-            await IdentitySeeder.SeedUserAsync(scope.ServiceProvider);
-            await IdentitySeeder.SeedAdminAsync(scope.ServiceProvider, email, password);
         }
-        catch (Exception ex)
-        {
-            var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-            logger.LogError(ex, "Migration/Seed ERROR");
-            throw;
-        }
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error occured while migrate the pending migrations");
+        throw;
+    }
+
+    try
+    {
+        IOptions<IdentityAdminRole> role = scope.ServiceProvider.GetRequiredService<IOptions<IdentityAdminRole>>();
+        IdentityAdminRole? admin = role?.Value;
+
+        string email = admin?.Email ?? string.Empty;
+        string password = admin?.Password ?? string.Empty;
+        if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
+            throw new ArgumentNullException("Roles are not configurated for admin account");
+
+        await IdentitySeeder.SeedUserAsync(scope.ServiceProvider);
+        await IdentitySeeder.SeedAdminAsync(scope.ServiceProvider, email, password);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Error occured while seeding the identity roles");
+        throw;
     }
 }
 
