@@ -28,7 +28,7 @@ namespace RentCarX.Presentation.Controllers
         }
 
         [HttpPost("webhook")]
-        [Consumes("application/json")]
+        //[Consumes("application/json")]
         public async Task<IActionResult> StripeWebhook(CancellationToken cancellationToken)
         {
             // allows body to be read more than once
@@ -49,14 +49,16 @@ namespace RentCarX.Presentation.Controllers
                 stripeEvent = EventUtility.ConstructEvent(
                     json,
                     Request.Headers["Stripe-Signature"],
-                    _endpointSecret
+                    _endpointSecret,
+                    throwOnApiVersionMismatch: false
                 );
 
                 _logger.LogInformation("Stripe webhook event received: {EventType}", stripeEvent.Type);
             }
             catch (StripeException ex)
             {
-                _logger.LogError(ex, "Stripe webhook signature verification failed.");
+                _logger.LogError("Stripe verification failed. Secret Length: {Len}. Error: {Msg}",
+                    _endpointSecret?.Length, ex.Message);
                 return BadRequest("Invalid signature");
             }
             catch (Exception ex)
