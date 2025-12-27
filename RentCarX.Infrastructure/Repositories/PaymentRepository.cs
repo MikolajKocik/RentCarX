@@ -28,6 +28,8 @@ namespace RentCarX.Infrastructure.Repositories
 
         public Task<Payment?> GetBySessionIdAsync(string sessionId, CancellationToken cancellationToken = default)
             => _dbContext.Payments
+            .Include(i => i.Item)
+            .Include(u => u.User)
             .FirstOrDefaultAsync(p => p.StripeCheckoutSessionId == sessionId, cancellationToken);
 
         public async Task<Payment?> GetByRefundIdAsync(string refundId, CancellationToken cancellationToken = default)
@@ -46,5 +48,9 @@ namespace RentCarX.Infrastructure.Repositories
 
             return paymentByCharge;
         }
+
+        public Task<Payment?> GetByPaymentIntentIdAsync(string paymentIntentId, CancellationToken cancellationToken = default)
+            => _dbContext.Payments
+                .FirstOrDefaultAsync(p => p.StripePaymentIntentId == paymentIntentId, cancellationToken);
     }
 }

@@ -19,6 +19,7 @@ using RentCarX.Infrastructure.Settings;
 using RentCarX.Presentation.Extensions.JWT;
 using RentCarX.Presentation.Extensions.Swagger;
 using Serilog;
+using Stripe;
 using System.Collections.Concurrent;
 
 namespace RentCarX.Presentation.Extensions;
@@ -98,6 +99,10 @@ public static class WebApplicationBuilderExtensions
         if (string.IsNullOrEmpty(stripeApiKey))
         {
             throw new InvalidOperationException();
+        }
+        else
+        {
+            StripeConfiguration.ApiKey = stripeApiKey; 
         }
     }
 }

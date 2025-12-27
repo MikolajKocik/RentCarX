@@ -36,8 +36,30 @@ public class StripeWebhookHandlerImplementation : IStripeWebhookHandler
                         session.Id,
                         session.PaymentIntentId,
                         session.CustomerId,
+                        session .InvoiceId,
                         cancellationToken
                     );
+                }
+                break;
+
+            case "checkout.session.expired":
+                var expiredSession = stripeEvent.Data.Object as Session;
+                if (expiredSession is not null)
+                {
+                    _logger.LogInformation("Checkout session expired: {Id}", expiredSession.Id);
+
+                    await _paymentService.HandleCheckoutSessionExpiredAsync(expiredSession.Id, cancellationToken);
+                }
+                break;
+
+            case "payment_intent.payment_failed":
+                var intent = stripeEvent.Data.Object as PaymentIntent;
+                if (intent is not null)
+                {
+                    _logger.LogWarning("Payment failed for intent: {Id}. Reason: {Reason}",
+                        intent.Id, intent.LastPaymentError?.Message);
+
+                    await _paymentService.HandlePaymentFailedAsync(intent.Id, cancellationToken);
                 }
                 break;
 

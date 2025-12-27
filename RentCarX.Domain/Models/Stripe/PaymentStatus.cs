@@ -12,6 +12,7 @@ namespace RentCarX.Domain.Models.Stripe
         RequiresAction = 1,
         Succeeded = 2,
         Failed = 3,
-        Refunded = 4
+        Refunded = 4,
+        Canceled = 5
     }
 }

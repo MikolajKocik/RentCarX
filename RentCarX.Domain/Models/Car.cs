@@ -1,4 +1,6 @@
-﻿namespace RentCarX.Domain.Models
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace RentCarX.Domain.Models
 {
     public sealed class Car
     {
@@ -19,6 +21,7 @@
             set => this._isAvailableFlag = value;
         }
 
+        [NotMapped]
         public bool IsAvailable
         {
             get => IsAvailableFlag == 1;
