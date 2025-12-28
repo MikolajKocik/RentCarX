@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using RentCarX.Domain.Models.Stripe;
+﻿using RentCarX.Domain.Models.Stripe;
 
 namespace RentCarX.Domain.Interfaces.Repositories
 {
@@ -14,5 +9,7 @@ namespace RentCarX.Domain.Interfaces.Repositories
         Task<Payment?> GetBySessionIdAsync(string sessionId, CancellationToken cancellationToken = default);
         Task<Payment?> GetByRefundIdAsync(string refundId, CancellationToken cancellationToken = default);
         Task<Payment?> GetByPaymentIntentIdAsync(string paymentIntentId, CancellationToken cancellationToken = default);
+        IQueryable<Payment> GetPendingReservations();
+        Task<List<Guid>> GetLockedCarIdsAsync(CancellationToken cancellationToken = default);
     }
 }

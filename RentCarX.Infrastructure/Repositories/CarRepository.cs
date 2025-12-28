@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using RentCarX.Application.DTOs.Car;
 using RentCarX.Domain.Interfaces.Repositories;
 using RentCarX.Domain.Models;
 using RentCarX.Infrastructure.Data;
@@ -30,6 +31,7 @@ public sealed class CarRepository : ICarRepository
 
     public async Task<List<Car>> GetUnavailableCarsAsync(CancellationToken cancellationToken)
         => await _context.Cars
+            .Include(c => c.Reservations)
             .Where(c => c.IsAvailableFlag == 0)
             .ToListAsync(cancellationToken);
 

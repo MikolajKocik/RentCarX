@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using DocumentFormat.OpenXml.InkML;
+using Microsoft.EntityFrameworkCore;
 using RentCarX.Domain.Interfaces.Repositories;
 using RentCarX.Domain.Models.Stripe;
 using RentCarX.Infrastructure.Data;
@@ -24,6 +25,20 @@ namespace RentCarX.Infrastructure.Repositories
         {
             _dbContext.Payments.Update(payment);
             await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        public async Task<List<Guid>> GetLockedCarIdsAsync(CancellationToken cancellationToken)
+        {
+            var now = DateTime.UtcNow;
+
+            return await _dbContext.Payments
+                .Include(p => p.Reservation)
+                .Where(r =>
+                    (r.Reservation.StartDate <= now && r.Reservation.EndDate >= now) ||
+                    (r.Status == PaymentStatus.Pending))
+                .Select(r => r.Reservation.CarId)
+                .Distinct() 
+                .ToListAsync(cancellationToken);
         }
 
         public Task<Payment?> GetBySessionIdAsync(string sessionId, CancellationToken cancellationToken = default)
@@ -52,5 +67,13 @@ namespace RentCarX.Infrastructure.Repositories
         public Task<Payment?> GetByPaymentIntentIdAsync(string paymentIntentId, CancellationToken cancellationToken = default)
             => _dbContext.Payments
                 .FirstOrDefaultAsync(p => p.StripePaymentIntentId == paymentIntentId, cancellationToken);
+
+        public IQueryable<Payment> GetPendingReservations()
+            => _dbContext.Payments
+                .Include(p => p.Reservation)
+                    .ThenInclude(r => r.User)
+                .Include(p => p.Reservation)
+                    .ThenInclude(r => r.Car)
+                .Where(p => p.Status == PaymentStatus.Pending);
     }
 }
