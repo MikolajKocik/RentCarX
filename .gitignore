@@ -9,6 +9,10 @@
 **/Properties/serviceDependencies.local.json
 *.user
 
+**/PublishProfiles/
+*.pubxml
+*.pubxml.user
+
 # Files built by Visual Studio
 *.obj
 *.csproj.user
