@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -10,10 +11,24 @@ public static class IdentitySeeder
     {
         using IServiceScope scope = serviceProvider.CreateScope();
         RoleManager<IdentityRole<Guid>> roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole<Guid>>>();
+        ILogger logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("IdentitySeeder");
 
-        if (!await roleManager.RoleExistsAsync("USER"))
+        try
         {
-            await roleManager.CreateAsync(new IdentityRole<Guid>("USER"));
+            if (!await roleManager.RoleExistsAsync("USER"))
+            {
+                await roleManager.CreateAsync(new IdentityRole<Guid>("USER"));
+            }
+        }
+        catch (SqlException ex)
+        {
+            logger.LogError(ex, "Error occured while startign Azure SQL instance");
+            throw;
+        }
+        catch (TimeoutException ex)
+        {
+            logger.LogError(ex, "Timeout error gateway occurred");
+            throw;
         }
     }
 
@@ -53,7 +68,7 @@ public static class IdentitySeeder
                 user.Email = adminEmail;
                 user.NormalizedEmail = adminEmail.ToUpperInvariant();
                 user.EmailConfirmed = true;
-                
+
 
                 IdentityResult createResult = await userManager.CreateAsync(user, adminPassword);
                 if (!createResult.Succeeded)
@@ -80,6 +95,16 @@ public static class IdentitySeeder
                     logger.LogInformation("Assigned Admin role to existing user: {Email}", adminEmail);
                 }
             }
+        }
+        catch (SqlException ex)
+        {
+            logger.LogError(ex, "Error occured while startign Azure SQL instance");
+            throw;
+        }
+        catch (TimeoutException ex)
+        {
+            logger.LogError(ex, "Timeout error gateway occurred");
+            throw;
         }
         catch (Exception ex)
         {

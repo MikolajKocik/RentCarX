@@ -1,4 +1,5 @@
 ﻿using Asp.Versioning;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.FeatureManagement;
@@ -11,7 +12,7 @@ namespace RentCarX.Presentation.Controllers
     [ApiController]
     [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/payments")]
-    [Authorize]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class PaymentsController : ControllerBase
     {
         private readonly IPaymentService _paymentService;
@@ -29,8 +30,8 @@ namespace RentCarX.Presentation.Controllers
             _featureManager = featureManager;
         }
 
-        [HttpPost("checkout/{reservationId}")]
-        public async Task<IActionResult> CreateCheckoutSession(Guid reservationId, CancellationToken cancellationToken)
+        [HttpPost("checkout/{reservationId:guid}")]
+        public async Task<IActionResult> CreateCheckoutSession([FromRoute] Guid reservationId, CancellationToken cancellationToken)
         {
             if (await _featureManager.IsEnabledAsync("Payments"))
             {

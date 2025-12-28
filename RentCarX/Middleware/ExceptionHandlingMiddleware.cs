@@ -1,5 +1,7 @@
-﻿using RentCarX.Domain.ExceptionModels;
-using RentCarX.Domain.Exceptions; 
+﻿using Microsoft.Data.SqlClient;
+using RentCarX.Domain.ExceptionModels;
+using RentCarX.Domain.Exceptions;
+using System.ComponentModel;
 using System.Net;
 using System.Text.Json; 
 using System.Text.Json.Serialization; 
@@ -87,8 +89,22 @@ namespace RentCarX.Presentation.Middleware
                 case UnauthorizedAccessException unauthorizedAccessException: 
                     statusCode = HttpStatusCode.Forbidden; 
                     title = "Forbidden";
-                    detail = "Access denied due to insufficient permissions."; 
+                    detail = unauthorizedAccessException.Message; 
                     errorCode = null; 
+                    break;
+
+                case SqlException sqlServerException:
+                    statusCode = HttpStatusCode.ServiceUnavailable;
+                    title = "ServiceUnvailable";
+                    detail = sqlServerException.Message;
+                    errorCode = null;
+                    break;
+
+                case TimeoutException timeoutException:
+                    statusCode = HttpStatusCode.GatewayTimeout;
+                    title = "GatewayTimeout";
+                    detail = timeoutException.Message;
+                    errorCode = null;
                     break;
 
                 default:

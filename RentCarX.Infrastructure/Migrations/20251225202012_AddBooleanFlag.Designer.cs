@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RentCarX.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using RentCarX.Infrastructure.Data;
 namespace RentCarX.Infrastructure.Migrations
 {
     [DbContext(typeof(RentCarX_DbContext))]
-    partial class RentCarX_DbContextModelSnapshot : ModelSnapshot
+    [Migration("20251225202012_AddBooleanFlag")]
+    partial class AddBooleanFlag
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -202,6 +205,9 @@ namespace RentCarX.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("IsAvailable")
+                        .HasColumnType("bit");
+
                     b.Property<int>("IsAvailableFlag")
                         .HasColumnType("int");
 
@@ -307,9 +313,6 @@ namespace RentCarX.Infrastructure.Migrations
                     b.Property<decimal>("Amount")
                         .HasPrecision(12, 2)
                         .HasColumnType("decimal(12,2)");
-
-                    b.Property<string>("CheckoutUrl")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -501,16 +504,16 @@ namespace RentCarX.Infrastructure.Migrations
                         {
                             Id = new Guid("99000000-0000-0000-0000-00000000dddd"),
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "30081065-6861-4522-a104-73e0ea012f1d",
+                            ConcurrencyStamp = "fe59eb5a-ec29-4533-af95-d7f1cc74abff",
                             Email = "admin@rentcarx.com",
                             EmailConfirmed = true,
                             IsDeleted = false,
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN@RENTCARX.COM",
                             NormalizedUserName = "ADMIN@RENTCARX.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEEaIlL6oAIFYsTYNKUh6Q4l5lVXPOq22776OEbSDfGBDQRfmOG1JW21meZHi+bUgmQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHqmlIMvgJKYMFYdk+AHOeDh8Zya+tO0zfAe5nfwQH8abGu07+YRoO5o/Qq3O43pfQ==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "bbee7635-d437-465d-8c36-0c1b97759ca6",
+                            SecurityStamp = "7dd559d3-e9e8-44e3-8995-cf3291b2153b",
                             TwoFactorEnabled = false,
                             UserName = "admin@rentcarx.com"
                         });

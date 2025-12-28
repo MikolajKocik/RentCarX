@@ -1,4 +1,6 @@
-﻿namespace RentCarX.Domain.Models
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace RentCarX.Domain.Models
 {
     public sealed class Car
     {
@@ -12,10 +14,18 @@
         public decimal PricePerDay { get; set; }
 
         // 1 = true | 0 = false
+        [System.Text.Json.Serialization.JsonIgnore]
         public int IsAvailableFlag
         {
             get => this._isAvailableFlag;
             set => this._isAvailableFlag = value;
+        }
+
+        [NotMapped]
+        public bool IsAvailable
+        {
+            get => IsAvailableFlag == 1;
+            set => IsAvailableFlag = value ? 1 : 0;
         }
 
         // Stripe integration

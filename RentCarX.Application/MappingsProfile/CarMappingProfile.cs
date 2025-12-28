@@ -8,10 +8,16 @@ namespace RentCarX.Application.MappingsProfile
     {
         public CarMappingProfile()
         {
-            CreateMap<Car, CarDto>().ReverseMap(); 
+            CreateMap<Car, CarDto>()
+                .ForMember(dest => dest.IsAvailable, opt => opt.MapFrom(src => src.IsAvailableFlag == 1));
 
-            CreateMap<CreateCarDto, Car>().ReverseMap();
-            CreateMap<EditCarDto, Car>().ReverseMap();
+            CreateMap<CreateCarDto, Car>()
+                .ForMember(dest => dest.IsAvailableFlag, opt => opt.MapFrom(src => src.IsAvailable ? 1 : 0));
+
+            CreateMap<EditCarDto, Car>()
+                .ForMember(dest => dest.IsAvailableFlag, opt => opt.MapFrom(src => src.IsAvailable ? 1 : 0))
+                .ReverseMap()
+                .ForMember(dest => dest.IsAvailable, opt => opt.MapFrom(src => src.IsAvailableFlag == 1));
         }
     }
 }

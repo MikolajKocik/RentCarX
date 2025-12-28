@@ -1,8 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using DocumentFormat.OpenXml.Spreadsheet;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
-using RentCarX.Domain.Models;
 using RentCarX.Domain.Interfaces.Repositories;
+using RentCarX.Domain.Models;
 using RentCarX.Infrastructure.Data;
 
 namespace RentCarX.Infrastructure.Repositories;
@@ -45,11 +46,15 @@ public sealed class ReservationRepository : IReservationRepository
             .ToListAsync(cancellationToken);
 
     public async Task<List<Guid>> GetCarIdsWithActiveReservationAsync(DateTime currentTime, CancellationToken cancellationToken)
-        => await _context.Reservations
-             .Where(r => r.EndDate >= currentTime && r.StartDate <= currentTime)
+    {
+        DateTime paymentBuffer = currentTime.AddMinutes(-60);
+
+        return await _context.Reservations
+             .Where(r => (r.EndDate > currentTime) && (r.IsPaid || r.StartDate > paymentBuffer))
              .Select(r => r.CarId)
              .Distinct()
              .ToListAsync(cancellationToken);
+    }
 
     public async Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken)
         => await _context.Database.BeginTransactionAsync(cancellationToken);

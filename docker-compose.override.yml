@@ -33,7 +33,7 @@ services:
       - Smtp__port=${SMTP_PORT}
       - Smtp__sender__name=${SMTP_SENDER_NAME}
       - Smtp__sender__email=${SMTP_SENDER_EMAIL}
-      - Smtp__usernam=${SMTP_USERNAME}
+      - Smtp__username=${SMTP_USERNAME}
       - Smtp__pass=${SMTP_PASS}
       - Smtp__enable__ssl=${SMTP_ENABLE_SSL}
      # NS
@@ -94,6 +94,12 @@ services:
       - AzureSqlConnection__UserID=${USER_ID}
       - AzureSqlConnection__Password=${PASSWORD}
       - AzureSqlConnection__InitialCatalog=${INITIAL_CATALOG}
+      # Stripe
+      - Stripe__PublishableKey=${PUBLISH_KEY}
+      - Stripe__SecretKey=${SECRET_KEY}
+      - Stripe__WebhookSecret=${WEBHOOK_SECRET}
+      - Stripe__SuccessUrl=${SUCCESS_URL}
+      - Stripe__CancelUrl=${CancelUrl}
     volumes:
       - ./RentCarX/appsettings.Development.json:/app/appsettings.Development.json:ro
     depends_on:

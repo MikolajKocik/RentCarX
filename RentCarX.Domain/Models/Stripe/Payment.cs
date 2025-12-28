@@ -12,6 +12,7 @@ namespace RentCarX.Domain.Models.Stripe
         public string StripePaymentIntentId { get; set; } = string.Empty;
         public string? StripeCheckoutSessionId { get; set; }
         public string? StripeCustomerId { get; set; }
+        public string? CheckoutUrl { get; set; }
 
         public decimal Amount { get; set; }
         public string Currency { get; set; } = "usd";

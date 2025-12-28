@@ -1,19 +1,20 @@
 ﻿using Asp.Versioning;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using RentCarX.Infrastructure.Services.Stripe;
+using RentCarX.Domain.Interfaces.Services.Stripe;
 
 namespace RentCarX.Presentation.Controllers
 {
-    [Authorize(Roles = "Admin")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
     [ApiController]
     [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/admin/stripe")]
     public class StripeAdminController : ControllerBase
     {
-        private readonly StripeProductService _stripeProductService;
+        private readonly IStripeProductService _stripeProductService;
 
-        public StripeAdminController(StripeProductService stripeProductService)
+        public StripeAdminController(IStripeProductService stripeProductService)
         {
             _stripeProductService = stripeProductService;
         }

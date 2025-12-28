@@ -30,7 +30,8 @@ public static class AzureSqlConfiguration
             Password = sqlSettings.Password,
             InitialCatalog = sqlSettings.InitialCatalog,
             Encrypt = true,
-            TrustServerCertificate = false
+            TrustServerCertificate = false,
+            ConnectTimeout = 60
         };
 
         return builder.ConnectionString;

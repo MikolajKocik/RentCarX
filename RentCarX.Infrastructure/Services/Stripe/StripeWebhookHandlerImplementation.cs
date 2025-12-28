@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using RentCarX.Domain.Interfaces.Services.Stripe;
 using Stripe;
+using Stripe.Checkout;
 
 namespace RentCarX.Infrastructure.Services.Stripe;
 
@@ -26,7 +27,40 @@ public class StripeWebhookHandlerImplementation : IStripeWebhookHandler
         switch (stripeEvent.Type)
         {
             case "checkout.session.completed":
-                // already handled in controller
+                var session = stripeEvent.Data.Object as Session;
+                if (session is not null)
+                {
+                    _logger.LogInformation("Processing successful payment for session: {SessionId}", session.Id);
+
+                    await _paymentService.HandleCheckoutSessionCompletedAsync(
+                        session.Id,
+                        session.PaymentIntentId,
+                        session.CustomerId,
+                        session .InvoiceId,
+                        cancellationToken
+                    );
+                }
+                break;
+
+            case "checkout.session.expired":
+                var expiredSession = stripeEvent.Data.Object as Session;
+                if (expiredSession is not null)
+                {
+                    _logger.LogInformation("Checkout session expired: {Id}", expiredSession.Id);
+
+                    await _paymentService.HandleCheckoutSessionExpiredAsync(expiredSession.Id, cancellationToken);
+                }
+                break;
+
+            case "payment_intent.payment_failed":
+                var intent = stripeEvent.Data.Object as PaymentIntent;
+                if (intent is not null)
+                {
+                    _logger.LogWarning("Payment failed for intent: {Id}. Reason: {Reason}",
+                        intent.Id, intent.LastPaymentError?.Message);
+
+                    await _paymentService.HandlePaymentFailedAsync(intent.Id, cancellationToken);
+                }
                 break;
 
             case "charge.refunded":
