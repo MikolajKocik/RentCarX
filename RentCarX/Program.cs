@@ -31,6 +31,8 @@ builder.Services.AddApplication(builder.Configuration);
 
 builder.AddPresentation();
 
+builder.Services.AddMemoryCache();
+
 builder.Services.AddApiVersioning(options =>
 {
     // 'api-supported-versions'
@@ -81,6 +83,7 @@ Console.WriteLine($"App Environment Name: {app.Environment.EnvironmentName}");
 app.UseSerilogRequestLogging();
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseMiddleware<TokenBlackListMiddleware>();
 
 app.UseHttpsRedirection();
 

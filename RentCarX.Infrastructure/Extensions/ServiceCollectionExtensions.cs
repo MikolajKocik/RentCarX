@@ -62,6 +62,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<InvoiceService>();
 
         services.AddScoped<IJwtTokenService, JwtTokenService>();
+        services.AddSingleton<ITokenBlacklistService, TokenBlackListService>();
 
         // stripe section
         services.Configure<StripeSettings>(configuration.GetSection("Stripe"));

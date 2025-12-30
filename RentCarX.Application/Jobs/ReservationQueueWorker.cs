@@ -40,7 +40,6 @@ public sealed class ReservationQueueWorker : BackgroundService
             {
                 try
                 {
-                    // telemetry todo
                     Console.WriteLine($"Processing vehicleId: {carId}");
                 }
                 catch (Exception ex)
