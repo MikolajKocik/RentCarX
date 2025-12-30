@@ -1,6 +1,7 @@
 ﻿using Microsoft.Data.SqlClient;
 using RentCarX.Domain.ExceptionModels;
 using RentCarX.Domain.Exceptions;
+using System;
 using System.ComponentModel;
 using System.Net;
 using System.Text.Json; 
@@ -91,6 +92,13 @@ namespace RentCarX.Presentation.Middleware
                     title = "Forbidden";
                     detail = unauthorizedAccessException.Message; 
                     errorCode = null; 
+                    break;
+
+                case ForbiddenException forbiddenException:
+                    statusCode = HttpStatusCode.Forbidden;
+                    title = "Forbidden";
+                    detail = forbiddenException.Message;
+                    errorCode = null;
                     break;
 
                 case SqlException sqlServerException:

@@ -24,6 +24,7 @@ public sealed class PaymentService : IPaymentService
     private readonly IEnumerable<INotificationSender> _senders;
     private readonly ILogger<PaymentService> _logger;
     private readonly InvoiceService _invoiceService;
+    private readonly RefundService _refundService;
 
     public PaymentService(
         SessionService sessionService,
@@ -33,7 +34,8 @@ public sealed class PaymentService : IPaymentService
         IOptions<StripeSettings> stripeOptions,
         IEnumerable<INotificationSender> senders,
         ILogger<PaymentService> logger,
-        InvoiceService invoiceService
+        InvoiceService invoiceService,
+        RefundService refundService
         )
     {
         _sessionService = sessionService;
@@ -43,6 +45,7 @@ public sealed class PaymentService : IPaymentService
         _settings = stripeOptions.Value;
         _senders = senders;
         _logger = logger;
+        _refundService = refundService;
         _invoiceService = invoiceService;
     }
 
@@ -112,6 +115,29 @@ public sealed class PaymentService : IPaymentService
         await _paymentRepository.AddAsync(payment, ct);
 
         return session.Url!;
+    }
+
+    public async Task CreateRefundAsync(string paymentIntentId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrEmpty(paymentIntentId))
+            throw new BadRequestException("Brak identyfikatora płatności (PaymentIntentId) do dokonania zwrotu.");
+
+        var options = new RefundCreateOptions
+        {
+            // pi.. key from database
+            PaymentIntent = paymentIntentId,
+        };
+
+        try
+        {
+            await _refundService.CreateAsync(options, cancellationToken: ct);
+            _logger.LogInformation("Successfully initiated Stripe refund for PaymentIntent: {Id}", paymentIntentId);
+        }
+        catch (StripeException ex)
+        {
+            _logger.LogError(ex, "Stripe error during refund for PaymentIntent: {Id}", paymentIntentId);
+            throw new BadRequestException($"Stripe Refund Error: {ex.Message}");
+        }
     }
 
     public async Task HandleCheckoutSessionCompletedAsync(

@@ -1,4 +1,5 @@
-﻿using RentCarX.Domain.Models.Stripe;
+﻿using RentCarX.Domain.Models;
+using RentCarX.Domain.Models.Stripe;
 
 namespace RentCarX.Domain.Interfaces.Repositories
 {
@@ -10,6 +11,7 @@ namespace RentCarX.Domain.Interfaces.Repositories
         Task<Payment?> GetByRefundIdAsync(string refundId, CancellationToken cancellationToken = default);
         Task<Payment?> GetByPaymentIntentIdAsync(string paymentIntentId, CancellationToken cancellationToken = default);
         IQueryable<Payment> GetPendingReservations();
+        Task<Payment?> GetByReservationId(Guid reservationId, CancellationToken cancellationToken);
         Task<List<Guid>> GetLockedCarIdsAsync(CancellationToken cancellationToken = default);
     }
 }

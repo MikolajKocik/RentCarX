@@ -60,6 +60,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IStripeProductService, StripeProductService>();
         services.AddScoped<IPaymentService, PaymentService>();
         services.AddScoped<InvoiceService>();
+        services.AddScoped<RefundService>();
 
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddSingleton<ITokenBlacklistService, TokenBlackListService>();

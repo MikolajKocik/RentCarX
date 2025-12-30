@@ -9,5 +9,6 @@ namespace RentCarX.Domain.Interfaces.Services.Stripe
         Task HandleRefundSucceededAsync(string refundId, string? chargeId = null, long? amount = null, string? currency = null, CancellationToken cancellationToken = default);
         Task HandlePaymentFailedAsync(string paymentIntentId, CancellationToken cancellationToken = default);
         Task HandleCheckoutSessionExpiredAsync(string sessionId, CancellationToken cancellationToken = default);
+        Task CreateRefundAsync(string paymentIntentId, CancellationToken cancellationToken = default);
     }
 }

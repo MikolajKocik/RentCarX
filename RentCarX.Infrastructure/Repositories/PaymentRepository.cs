@@ -1,8 +1,10 @@
 ﻿using DocumentFormat.OpenXml.InkML;
 using Microsoft.EntityFrameworkCore;
 using RentCarX.Domain.Interfaces.Repositories;
+using RentCarX.Domain.Models;
 using RentCarX.Domain.Models.Stripe;
 using RentCarX.Infrastructure.Data;
+using System.Threading;
 
 namespace RentCarX.Infrastructure.Repositories
 {
@@ -64,6 +66,10 @@ namespace RentCarX.Infrastructure.Repositories
             return paymentByCharge;
         }
 
+        public async Task<Payment?> GetByReservationId(Guid reservationId, CancellationToken cancellationToken)
+            => await _dbContext.Payments
+                .FirstOrDefaultAsync(p => p.ReservationId == reservationId && p.Status == PaymentStatus.Succeeded, cancellationToken);
+        
         public Task<Payment?> GetByPaymentIntentIdAsync(string paymentIntentId, CancellationToken cancellationToken = default)
             => _dbContext.Payments
                 .FirstOrDefaultAsync(p => p.StripePaymentIntentId == paymentIntentId, cancellationToken);
