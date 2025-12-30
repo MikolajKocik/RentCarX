@@ -30,6 +30,11 @@ public sealed class HardDeleteReservationCommandHandler : IRequestHandler<HardDe
             throw new AlreadyDeletedException("Reservation is already deleted", nameof(reservation));
         }
 
+        if (reservation.Car is not null)
+        {
+            reservation.Car.IsAvailableFlag = 1;
+        }
+
         await _reservationRepository.DeleteAsync(reservation.Id, cancellationToken);
         return Unit.Value;
     }

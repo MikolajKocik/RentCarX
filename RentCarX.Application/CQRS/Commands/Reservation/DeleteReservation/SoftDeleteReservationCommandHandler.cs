@@ -31,6 +31,11 @@ namespace RentCarX.Application.CQRS.Commands.Reservation.DeleteReservation
             }
 
             reservation.IsDeleted = true;
+            if (reservation.Car is not null)
+            {
+                reservation.Car.IsAvailableFlag = 1;
+            }
+
             await _reservationRepository.SaveToDatabase(cancellationToken);
             return Unit.Value;
         }
