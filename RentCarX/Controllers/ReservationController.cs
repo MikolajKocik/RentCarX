@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RentCarX.Application.CQRS.Commands.Reservation.CancelReservation;
 using RentCarX.Application.CQRS.Commands.Reservation.CreateReservation;
 using RentCarX.Application.CQRS.Commands.Reservation.DeleteReservation;
 using RentCarX.Application.CQRS.Commands.Reservation.InitiatePayment;
@@ -75,7 +76,20 @@ namespace RentCarX.Presentation.Controllers
             return Ok(result);
         }
 
+        [HttpPost("{id:guid}/cancel")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)] 
+        [ProducesResponseType(StatusCodes.Status404NotFound)] 
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> CancelReservation(Guid id, CancellationToken cancellationToken)
+        {
+            await _mediator.Send(new CancelReservationCommand(id), cancellationToken);
+            return NoContent();
+        }
+
         [HttpDelete("{id:guid}/delete/soft")] // soft-delete approach
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -87,6 +101,7 @@ namespace RentCarX.Presentation.Controllers
         }
 
         [HttpDelete("{id:guid}/delete")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, Roles = "Admin")]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]

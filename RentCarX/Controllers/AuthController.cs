@@ -7,6 +7,7 @@ using RentCarX.Application.CQRS.Commands.Auth.ConfirmEmail;
 using RentCarX.Application.CQRS.Commands.Auth.DeleteAccount;
 using RentCarX.Application.CQRS.Commands.Auth.ForgotPassword;
 using RentCarX.Application.CQRS.Commands.Auth.Login;
+using RentCarX.Application.CQRS.Commands.Auth.Logout;
 using RentCarX.Application.CQRS.Commands.Auth.Register;
 using RentCarX.Application.CQRS.Commands.Auth.ResetPassword;
 using RentCarX.Application.CQRS.Queries.Admin.GetDeletedUsers;
@@ -53,6 +54,16 @@ public class AuthController : ControllerBase
         var token = await _mediator.Send(command);
 
         return Ok(new { message = "User logged successfully", token = token });
+    }
+
+    [HttpPost("logout")]
+    [Authorize] 
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Logout()
+    {
+        await _mediator.Send(new LogoutCommand());
+        return Ok(new { message = "Logged out successfully" });
     }
 
     [HttpPost("confirm-email")]

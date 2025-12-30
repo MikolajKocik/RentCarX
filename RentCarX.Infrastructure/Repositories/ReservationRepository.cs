@@ -1,7 +1,5 @@
-﻿using DocumentFormat.OpenXml.Spreadsheet;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
-using Microsoft.Extensions.Logging;
 using RentCarX.Domain.Interfaces.Repositories;
 using RentCarX.Domain.Models;
 using RentCarX.Infrastructure.Data;
@@ -11,12 +9,10 @@ namespace RentCarX.Infrastructure.Repositories;
 public sealed class ReservationRepository : IReservationRepository
 {
     private readonly RentCarX_DbContext _context;
-    private readonly ILogger<ReservationRepository> _logger;
 
-    public ReservationRepository(RentCarX_DbContext context, ILogger<ReservationRepository> logger)
+    public ReservationRepository(RentCarX_DbContext context)
     {
         _context = context;
-        _logger = logger;
     }
 
     public async Task Create(Reservation reservation, CancellationToken cancellationToken)
@@ -66,13 +62,11 @@ public sealed class ReservationRepository : IReservationRepository
             .FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
 
     public async Task<bool> HasOverlappingReservationAsync(Guid carId, DateTime startDate, DateTime endDate, CancellationToken cancellationToken)
-    {
-        return await _context.Reservations.AnyAsync(r =>
+        => await _context.Reservations.AnyAsync(r =>
                 r.CarId == carId &&
                 r.EndDate >= startDate &&
                 r.StartDate <= endDate,
                 cancellationToken);
-    }
 
     public async Task UpdateAsync(Reservation reservation, CancellationToken cancellationToken)
     {
