@@ -209,29 +209,62 @@ public sealed class PaymentService : IPaymentService
 
     public async Task HandleRefundSucceededAsync(
         string refundId,
-        string? chargeId = null,
+        bool sendEmail,
+        string? paymentIntentId = null,
         long? amount = null,
         string? currency = null,
-        CancellationToken ct = default
-        )
+        CancellationToken ct = default)
     {
-        Payment? payment = await _paymentRepository.GetByRefundIdAsync(refundId, ct);
-        if (payment is null || payment.Status == PaymentStatus.Refunded) return;
-
-        payment.Status = PaymentStatus.Refunded;
-        payment.RefundedAt = DateTime.UtcNow;
-
-        if (payment.ReservationId.HasValue)
+        Payment? payment = await _paymentRepository.GetByPaymentIntentIdAsync(paymentIntentId, ct);
+        if (payment is null)
         {
-            Reservation? reservation = await _reservationRepository.GetReservationByIdAsync(payment.ReservationId.Value, ct);
-            if (reservation is not null)
-            {
-                reservation.IsPaid = false;
-                await _reservationRepository.UpdateAsync(reservation, ct);
-            }
+            _logger.LogWarning("Refund webhook: Payment not found for PI: {PI}", paymentIntentId);
+            return;
         }
 
-        await _paymentRepository.UpdateAsync(payment, ct);
+        if (payment.Status != PaymentStatus.Refunded)
+        {
+            payment.Status = PaymentStatus.Refunded;
+            payment.RefundedAt = DateTime.UtcNow;
+
+            if (payment.ReservationId.HasValue)
+            {
+                var reservation = await _reservationRepository.GetReservationByIdAsync(payment.ReservationId.Value, ct);
+                if (reservation is not null)
+                {
+                    reservation.IsPaid = false;
+                    await _reservationRepository.UpdateAsync(reservation, ct);
+                }
+            }
+            await _paymentRepository.UpdateAsync(payment, ct);
+            _logger.LogInformation("Database updated to Refunded status via Webhook for PI: {PI}", paymentIntentId);
+        }
+
+        if (payment.User != null && !payment.IsRefundNotified && sendEmail == true)
+        {
+            payment.IsRefundNotified = true;
+
+            string itemName = payment.Item?.Name ?? "Car Reservation";
+
+            string subject = "RentCarX - Payment Refunded!";
+            string messageBody = $"""
+            <html>
+              <body>
+                  <h2>Payment Refunded!</h2>
+                  <p>Great news! Your refund for <strong>{itemName}</strong> was successful.</p>
+                  <p>Amount: <strong>{payment.Amount} {payment.Currency.ToUpper()}</strong>.</p>
+                  <p>The money should be back on your account within a few days.</p>
+                  <p>Thank you for choosing RentCarX!</p>
+              </body>
+            </html>
+            """;
+
+            var smtp = _senders.First(s => s.StrategyName.Equals(NotificationStrategyOptions.Smtp));
+            await smtp.SendNotificationAsync(subject, messageBody, ct, payment.User.Email);
+
+            await _paymentRepository.UpdateAsync(payment, ct);
+            _logger.LogInformation("Refund email successfully sent to {Email}", payment.User.Email);
+        }
     }
 
     public async Task HandlePaymentFailedAsync(string paymentIntentId, CancellationToken cancellationToken = default)

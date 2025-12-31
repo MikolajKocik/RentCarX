@@ -64,44 +64,34 @@ public class StripeWebhookHandlerImplementation : IStripeWebhookHandler
                 break;
 
             case "charge.refunded":
-            case "charge.dispute.closed":
-            case "refund.updated":
-            case "refund.succeeded":
-                try
+                var charge = stripeEvent.Data.Object as Charge;
+                if (charge != null)
                 {
-                    var refund = stripeEvent.Data.Object as Refund;
-                    if (refund is not null)
-                    {
-                        object? chargeObj = refund.Charge;
-                        string? chargeId = null;
+                    string refundId = charge.Refunds?.Data?.FirstOrDefault()?.Id ?? "unknown";
 
-                        if (chargeObj is string s)
-                        {
-                            chargeId = s;
-                        }
-                        else if (chargeObj is Charge c)
-                        {
-                            chargeId = c.Id;
-                        }
-                        else
-                        {
-                            chargeId = chargeObj?.ToString();
-                        }
-
-                        long amount = refund.Amount;
-                        string currency = refund.Currency;
-
-                        await _paymentService.HandleRefundSucceededAsync(
-                            refund.Id,
-                            chargeId,
-                            amount, 
-                            currency,
-                            cancellationToken);
-                    }
+                    await _paymentService.HandleRefundSucceededAsync(
+                        refundId: refundId,
+                        sendEmail: true,
+                        paymentIntentId: charge.PaymentIntentId, 
+                        amount: charge.AmountRefunded,           
+                        currency: charge.Currency,
+                        ct: cancellationToken);
                 }
-                catch (Exception ex)
+                break;
+            case "charge.dispute.closed":      
+            case "refund.succeeded":
+            case "refund.updated":
+                var refund = stripeEvent.Data.Object as Refund;
+                if (refund != null)
                 {
-                    _logger.LogError(ex, "Error handling refund event");
+                    await _paymentService.HandleRefundSucceededAsync(
+                        refundId: refund.Id,
+                        sendEmail: false,
+                        paymentIntentId: refund.PaymentIntentId, 
+                        amount: refund.Amount,
+                        currency: refund.Currency,
+                        ct: cancellationToken
+                    );
                 }
                 break;
 
