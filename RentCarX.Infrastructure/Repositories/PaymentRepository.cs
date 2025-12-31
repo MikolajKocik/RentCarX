@@ -53,12 +53,14 @@ namespace RentCarX.Infrastructure.Repositories
         {
             var refund = await _dbContext.Refunds
                 .Include(r => r.Payment)
+                    .ThenInclude(r => r.User)
                 .FirstOrDefaultAsync(r => r.StripeRefundId == refundId, cancellationToken);
 
             if (refund is not null)
                 return refund.Payment;
 
             var paymentByCharge = await _dbContext.Payments
+                .Include(p => p.User)
                 .FirstOrDefaultAsync(
                     p => p.StripePaymentIntentId == refundId ||
                     p.StripeCheckoutSessionId == refundId, cancellationToken);
@@ -72,6 +74,8 @@ namespace RentCarX.Infrastructure.Repositories
         
         public Task<Payment?> GetByPaymentIntentIdAsync(string paymentIntentId, CancellationToken cancellationToken = default)
             => _dbContext.Payments
+                .Include(p => p.User)
+                .Include(p => p.Item)
                 .FirstOrDefaultAsync(p => p.StripePaymentIntentId == paymentIntentId, cancellationToken);
 
         public IQueryable<Payment> GetPendingReservations()

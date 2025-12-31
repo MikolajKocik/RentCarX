@@ -14,6 +14,8 @@ namespace RentCarX.Domain.Models.Stripe
         public string? StripeCustomerId { get; set; }
         public string? CheckoutUrl { get; set; }
 
+        public bool IsRefundNotified { get; set; } = false;
+
         public decimal Amount { get; set; }
         public string Currency { get; set; } = "usd";
 
