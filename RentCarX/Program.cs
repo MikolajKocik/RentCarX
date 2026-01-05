@@ -63,7 +63,7 @@ if (builder.Environment.IsDevelopment())
 else
 {
     builder.Services.AddDataProtection()
-            .PersistKeysToFileSystem(new DirectoryInfo(@"C:\DataProtectionKeys"));
+            .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(builder.Environment.ContentRootPath, "DataProtectionKeys")));
 
     builder.Services.Configure<AzureSqlConnection>(
         builder.Configuration.GetSection("AzureSqlConnection"));
@@ -111,8 +111,16 @@ if (app.Environment.IsDevelopment())
     // Configure the HTTP request pipeline.
     app.UseDeveloperExceptionPage();
 }
+else
+{
+    app.UseForwardedHeaders(new ForwardedHeadersOptions
+    {
+        ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor | 
+            Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto
+    });
+}
 
-app.MapControllers();
+    app.MapControllers();
 
 
 // auto-migrating
