@@ -13,8 +13,8 @@ namespace RentCarX.HangfireWorker.Jobs;
 public sealed class SendReservationDeadline : JobPlanner
 {
     private readonly IReservationRepository _reservationRepository;
-    private readonly IEnumerable<INotificationSender> _sender;
-    private readonly NotificationFeatureFlags _flags;
+    private readonly IEnumerable<INotificationSender> _senders;
+    private readonly IOptions<NotificationFeatureFlags> _flags;
 
     public SendReservationDeadline(
         IReservationRepository reservationRepository,
@@ -23,8 +23,8 @@ public sealed class SendReservationDeadline : JobPlanner
         ILogger<UpdateCarAvailabilityJob> logger) : base(logger)
     {
         _reservationRepository = reservationRepository;
-        _sender = sender;
-        _flags = flags.Value;
+        _senders = sender;
+        _flags = flags;
     }
 
     public override async Task PerformJobAsync(CancellationToken cancellationToken)
@@ -32,12 +32,23 @@ public sealed class SendReservationDeadline : JobPlanner
         DateTime now = DateTime.UtcNow;
         DateTime targetTime = now.AddMinutes(30);
 
-        INotificationSender? notification = _sender.FirstOrDefault(r => r.StrategyName == NotificationStrategyOptions.Azure);
-        if (notification is null) return;
+        if (_flags.Value.UseAzureNotifications)
+        {
+            INotificationSender? azure = _senders.FirstOrDefault(r => r.StrategyName == NotificationStrategyOptions.Azure);
+            if (azure is not null)
+            {
+                await SetNotificationAsync(targetTime, azure, cancellationToken);
+            }        
+        }
 
-        if (!_flags.UseAzureNotifications) return;
-
-        await SetNotificationAsync(targetTime, notification, cancellationToken);
+        if (_flags.Value.UseSmtpProtocol)
+        {
+            INotificationSender? smtp = _senders.FirstOrDefault(s => s.StrategyName == NotificationStrategyOptions.Smtp);
+            if (smtp is not null)
+            {
+                await SetNotificationAsync(targetTime, smtp, cancellationToken);
+            }        
+        }
     }
 
     private async Task SetNotificationAsync(DateTime targetTime, INotificationSender notification, CancellationToken cancellationToken)
@@ -64,6 +75,7 @@ public sealed class SendReservationDeadline : JobPlanner
                             <p> This message is auto generated.</p>
                         </body>
                     </html>";
+
 
             await notification.SendNotificationAsync(subject, messageBody, cancellationToken, reservation.User.Email);
         }
