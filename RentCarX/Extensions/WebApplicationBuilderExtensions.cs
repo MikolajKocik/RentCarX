@@ -18,6 +18,8 @@ using RentCarX.HangfireWorker.Common;
 using RentCarX.Infrastructure.Settings;
 using RentCarX.Presentation.Extensions.JWT;
 using RentCarX.Presentation.Extensions.Swagger;
+using RentCarX.Presentation.Observability.Loki;
+using RentCarX.Presentation.Observability.OpenTelemetryCommon;
 using Serilog;
 using Stripe;
 using System.Collections.Concurrent;
@@ -104,5 +106,11 @@ public static class WebApplicationBuilderExtensions
         {
             StripeConfiguration.ApiKey = stripeApiKey; 
         }
+
+        // Grafana Loki 
+        builder.SetLoki();
+
+        // OpenTelemetry
+        builder.Initialize();
     }
 }

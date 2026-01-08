@@ -13,6 +13,8 @@ using RentCarX.Application.CQRS.Queries.Reservation.GetMy;
 using RentCarX.Application.DTOs.Reservation;
 using RentCarX.Application.Interfaces.Services.Reports;
 using RentCarX.Application.Services.ReportingService;
+using RentCarX.Presentation.Observability.Prometheus;
+using System.Diagnostics;
 
 namespace RentCarX.Presentation.Controllers
 {
@@ -46,6 +48,8 @@ namespace RentCarX.Presentation.Controllers
         public async Task<IActionResult> CreateReservation([FromBody] CreateReservationCommand command, CancellationToken cancellationToken)
         {
             var id = await _mediator.Send(command, cancellationToken);
+
+            ApplicationMetrics.ReservationCreated.Add(1);
             return CreatedAtAction(nameof(GetById), new { id = id }, id);
         }
 
@@ -63,6 +67,7 @@ namespace RentCarX.Presentation.Controllers
         public async Task<ActionResult<ReservationDto>> GetById(Guid id, CancellationToken cancellationToken)
         {
             ReservationDto reservation = await _mediator.Send(new GetReservationByIdQuery(id), cancellationToken);
+
             return Ok(reservation);
         }
 
@@ -85,6 +90,8 @@ namespace RentCarX.Presentation.Controllers
         public async Task<IActionResult> CancelReservation(Guid id, CancellationToken cancellationToken)
         {
             await _mediator.Send(new CancelReservationCommand(id), cancellationToken);
+
+            ApplicationMetrics.ReservationCancelled.Add(1);
             return NoContent();
         }
 
@@ -119,6 +126,7 @@ namespace RentCarX.Presentation.Controllers
         {
             string checkoutUrl = await _mediator.Send(new InitiatePaymentCommand(id), cancellationToken);
 
+            ApplicationMetrics.PaymentProcessed.Add(1);
             return Ok(new { checkoutUrl }); 
         }
 

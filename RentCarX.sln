@@ -13,13 +13,15 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RentCarX.Application", "Ren
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Elementy rozwiązania", "Elementy rozwiązania", "{8FB176BD-0036-D269-15EA-F86E90622887}"
 	ProjectSection(SolutionItems) = preProject
-		.env = .env
 		.env.template = .env.template
 		docker-compose.override.yml = docker-compose.override.yml
 		docker-compose.yml = docker-compose.yml
+		env = env
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RentCarX.HangfireWorker", "RentCarX.HangfireWorker\RentCarX.HangfireWorker.csproj", "{B918EC02-6ECC-59FA-CF05-1C2444C2EA88}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RentCarX.Tests", "RentCarX.Tests\RentCarX.Tests.csproj", "{A90833B3-9F8D-4807-90E7-AD9F05D3347D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -47,6 +49,10 @@ Global
 		{B918EC02-6ECC-59FA-CF05-1C2444C2EA88}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B918EC02-6ECC-59FA-CF05-1C2444C2EA88}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B918EC02-6ECC-59FA-CF05-1C2444C2EA88}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A90833B3-9F8D-4807-90E7-AD9F05D3347D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A90833B3-9F8D-4807-90E7-AD9F05D3347D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A90833B3-9F8D-4807-90E7-AD9F05D3347D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A90833B3-9F8D-4807-90E7-AD9F05D3347D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
