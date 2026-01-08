@@ -102,12 +102,6 @@ public class CreateReservationCommandHandler : IRequestHandler<CreateReservation
 
             var tasks = new List<Task>();
 
-            //if (_flags.UseAzureNotifications)
-            //{
-            //    INotificationSender azureNotificationHub = _senders.First(s => s.StrategyName.Equals(NotificationStrategyOptions.Azure));
-            //    tasks.Add(azureNotificationHub.SendNotificationAsync(subject, messageBody, cancellationToken, _userContext.Email));
-            //}
-
             if (_flags.UseSmtpProtocol)
             {
                 INotificationSender smtpProtocol = _senders.First(s => s.StrategyName.Equals(NotificationStrategyOptions.Smtp));

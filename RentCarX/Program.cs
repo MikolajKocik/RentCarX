@@ -3,6 +3,7 @@ using Asp.Versioning.ApiExplorer;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using OpenTelemetry.Trace;
 using RentCarX.Application.Extensions;
 using RentCarX.HangfireWorker.Extensions;
 using RentCarX.Infrastructure.Data;
@@ -13,6 +14,7 @@ using RentCarX.Infrastructure.Settings;
 using RentCarX.Presentation.Extensions;
 using RentCarX.Presentation.Helpers;
 using RentCarX.Presentation.Middleware;
+using RentCarX.Presentation.Observability.Prometheus;
 using Serilog;
 using System.Diagnostics;
 
@@ -71,19 +73,46 @@ else
 
 var app = builder.Build();
 
+#region Middlewares
+
+// exceptions middleware
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+// serilog
+app.UseSerilogRequestLogging();
+
+// middleawre for buffering body request
 app.Use((context, next) =>
 {
     context.Request.EnableBuffering();
     return next();
 });
 
-Console.WriteLine($"App Environment Name: {app.Environment.EnvironmentName}");
+// midleware for tempo traces
+app.Use(async (context, next) =>
+{
+    using var activity = ApplicationMetrics.ActivitySource.StartActivity(
+        $"HTTP {context.Request.Method} {context.Request.Path}");
 
-// serilog
-app.UseSerilogRequestLogging();
+    await next();
 
-app.UseMiddleware<ExceptionHandlingMiddleware>();
+    activity?.SetTag("http.response.status_code", context.Response.StatusCode);
+});
+
+// jti middleware
 app.UseMiddleware<TokenBlackListMiddleware>();
+
+// middleware for prometheus metrics
+app.Use(async (context, next) =>
+{
+    var sw = Stopwatch.StartNew();
+    await next.Invoke();
+    sw.Stop();
+
+    ApplicationMetrics.RequestDuration.Record(sw.Elapsed.TotalMilliseconds);
+});
+
+Console.WriteLine($"App Environment Name: {app.Environment.EnvironmentName}");
 
 app.UseHttpsRedirection();
 
@@ -92,6 +121,8 @@ app.UseRouting();
 app.UseAuthentication();
 
 app.UseAuthorization();
+
+#endregion
 
 // swagger 
 if (app.Environment.IsDevelopment())
@@ -115,12 +146,12 @@ else
 {
     app.UseForwardedHeaders(new ForwardedHeadersOptions
     {
-        ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor | 
+        ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor |
             Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto
     });
 }
 
-    app.MapControllers();
+app.MapControllers();
 
 
 // auto-migrating
