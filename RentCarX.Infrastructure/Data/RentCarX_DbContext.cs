@@ -14,8 +14,8 @@ namespace RentCarX.Infrastructure.Data
     {
         private readonly IdentityAdminRole _adminRole;
 
-        internal DbSet<Car> Cars { get; set; }
-        internal DbSet<Reservation> Reservations { get; set; }
+        public DbSet<Car> Cars { get; set; }
+        public DbSet<Reservation> Reservations { get; set; }
         internal DbSet<Item> Items { get; set; }
         internal DbSet<Payment> Payments { get; set; }
         internal DbSet<Refund> Refunds { get; set; }

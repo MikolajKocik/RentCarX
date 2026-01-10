@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using RentCarX.Application.DTOs.Car;
 using RentCarX.Domain.Interfaces.Repositories;
 using RentCarX.Domain.Models;
 using RentCarX.Infrastructure.Data;
@@ -64,6 +63,7 @@ public sealed class CarRepository : ICarRepository
          string? fuelType,
          decimal? minPrice,
          decimal? maxPrice,
+         int? year,
          bool? isAvailable)
     {
         var query = _context.Cars.AsQueryable();
@@ -83,9 +83,12 @@ public sealed class CarRepository : ICarRepository
         if (maxPrice.HasValue)
             query = query.Where(c => c.PricePerDay <= maxPrice.Value);
 
+        if (year.HasValue)
+            query = query.Where(c => c.Year == year.Value);
+
         if (isAvailable.HasValue)
             query = query.Where(c => (c.IsAvailableFlag == 1) == isAvailable.Value);
 
-        return query; 
+        return query;      
     }
 }
