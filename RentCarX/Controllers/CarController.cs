@@ -34,10 +34,13 @@ public class CarController : ControllerBase
         [FromQuery] string? fuelType = null,
         [FromQuery] decimal? minPrice = null,
         [FromQuery] decimal? maxPrice = null,
+        [FromQuery] int? year = null,
         [FromQuery] bool? isAvailable = null,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10,
         CancellationToken cancellationToken = default)
     {
-        var query = new GetFilteredCarsQuery(brand, model, fuelType, minPrice, maxPrice, isAvailable);
+        var query = new GetFilteredCarsQuery(brand, model, fuelType, minPrice, maxPrice, year, isAvailable, pageNumber, pageSize);
         var cars = await _mediator.Send(query, cancellationToken);
 
         return Ok(cars);

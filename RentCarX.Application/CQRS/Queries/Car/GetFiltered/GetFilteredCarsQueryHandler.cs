@@ -26,13 +26,17 @@ namespace RentCarX.Application.CQRS.Queries.Car.GetFiltered
                 request.FuelType,
                 request.MinPrice,
                 request.MaxPrice,
+                request.Year,
                 request.IsAvailable);
 
-            
+            query = query
+                .OrderBy(c => c.Id)
+                .Skip((request.PageNumber - 1) * request.PageSize)
+                .Take(request.PageSize);
+
             return await query
                 .ProjectTo<CarDto>(_mapper.ConfigurationProvider)
-                .ToListAsync(cancellationToken);
-
+                .ToListAsync(cancellationToken);        
         }
     }
 }

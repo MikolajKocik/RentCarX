@@ -15,6 +15,7 @@ namespace RentCarX.Domain.Interfaces.Repositories
          string? fuelType,
          decimal? minPrice,
          decimal? maxPrice,
+         int? year,
          bool? isAvailable);
         Task UpdateAvailabilityForCarsAsync(IEnumerable<Guid> carIds, bool isAvailable, CancellationToken cancellationToken);
         Task<List<Car>> GetUnavailableCarsAsync(CancellationToken cancellationToken);
