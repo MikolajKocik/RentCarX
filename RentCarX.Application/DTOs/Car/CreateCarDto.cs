@@ -1,4 +1,6 @@
-﻿namespace RentCarX.Application.DTOs.Car
+﻿using Microsoft.AspNetCore.Http;
+
+namespace RentCarX.Application.DTOs.Car
 {
     public class CreateCarDto
     {
@@ -8,5 +10,6 @@
         public string FuelType { get; set; } = default!;
         public decimal PricePerDay { get; set; }
         public bool IsAvailable { get; set; } 
+        public IFormFile? Image { get; set; }
     }
 }
