@@ -6,6 +6,7 @@ using RentCarX.Domain.Interfaces.DbContext;
 using RentCarX.Domain.Interfaces.Repositories;
 using RentCarX.Domain.Interfaces.Services.Stripe;
 using RentCarX.Domain.Interfaces.UserContext;
+using RentCarX.Domain.Models.Enums;
 using RentCarX.Domain.Models.Stripe;
 
 namespace RentCarX.Application.CQRS.Commands.Reservation.CancelReservation;
@@ -69,6 +70,7 @@ public sealed class CancelReservationCommandHandler : IRequestHandler<CancelRese
                 _logger.LogInformation("Stripe refund initiated for PaymentIntent: {Pi}", payment.StripePaymentIntentId);
             }
 
+            reservation.Status = ReservationStatus.Cancelled;
             reservation.IsDeleted = true;
 
             if (reservation.Car is not null)
