@@ -18,6 +18,8 @@
 *.csproj.user
 .vs/
 
+RentCarX/publish_output/
+RentCarX/DataProtectionKeys/
 /RentCarX/appsettings.json
 *.log
 /RentCarX/appsettings.Production.json

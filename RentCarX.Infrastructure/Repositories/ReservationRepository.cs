@@ -2,7 +2,9 @@
 using Microsoft.EntityFrameworkCore.Storage;
 using RentCarX.Domain.Interfaces.Repositories;
 using RentCarX.Domain.Models;
+using RentCarX.Domain.Models.Enums;
 using RentCarX.Infrastructure.Data;
+using System.Linq.Expressions;
 
 namespace RentCarX.Infrastructure.Repositories;
 
@@ -84,4 +86,13 @@ public sealed class ReservationRepository : IReservationRepository
 
     public async Task SaveToDatabase(CancellationToken cancellationToken)
         => await _context.SaveChangesAsync(cancellationToken);
+
+    public async Task UpdateReservationStatusAsync(Expression<Func<Reservation, bool>> predicate, ReservationStatus newStatus, CancellationToken cancellationToken)
+        => await _context.Reservations
+            .Where(predicate)
+            .ExecuteUpdateAsync(
+                setters => setters.SetProperty(
+                    r => r.Status,
+                    newStatus),
+                cancellationToken);
 }

@@ -55,6 +55,7 @@ public class CarController : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden)] 
     [ProducesResponseType(StatusCodes.Status404NotFound)] 
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [Consumes("multipart/form-data")]
     public async Task<IActionResult> Create([FromBody] CreateCarCommand command, CancellationToken cancellationToken)
     {
         var id = await _mediator.Send(command, cancellationToken);
