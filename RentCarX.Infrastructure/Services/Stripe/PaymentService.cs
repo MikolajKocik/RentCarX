@@ -7,10 +7,13 @@ using RentCarX.Domain.Exceptions;
 using RentCarX.Domain.Interfaces.Repositories;
 using RentCarX.Domain.Interfaces.Services.Stripe;
 using RentCarX.Domain.Models;
+using RentCarX.Domain.Models.Enums;
 using RentCarX.Domain.Models.Stripe;
 using RentCarX.Infrastructure.Settings;
 using Stripe;
 using Stripe.Checkout;
+
+#pragma warning disable CS8604
 
 namespace RentCarX.Infrastructure.Services.Stripe;
 
@@ -97,7 +100,7 @@ public sealed class PaymentService : IPaymentService
         {
             StripeCheckoutSessionId = session.Id,
             Amount = amount,
-            Currency = "pln",
+            Currency = "usd",
             Status = PaymentStatus.Pending,
             ReservationId = reservation.Id,
             UserId = request.UserId,
@@ -108,7 +111,7 @@ public sealed class PaymentService : IPaymentService
                 Name = $"{car.Brand} {car.Model}",
                 Description = $"Rental car - {car.FuelType}, {car.Year}",
                 Price = amount,
-                Currency = "pln"
+                Currency = "usd"
             }
         };
 
@@ -164,6 +167,7 @@ public sealed class PaymentService : IPaymentService
             if (reservation is not null)
             {
                 reservation.IsPaid = true;
+                reservation.Status = ReservationStatus.Confirmed;
                 await _reservationRepository.UpdateAsync(reservation, ct);
             }
         }
@@ -325,3 +329,5 @@ public sealed class PaymentService : IPaymentService
         await _paymentRepository.UpdateAsync(payment, cancellationToken);
     }
 }
+
+#pragma warning restore CS8604

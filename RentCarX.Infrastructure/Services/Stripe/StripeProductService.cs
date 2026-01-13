@@ -28,7 +28,7 @@ namespace RentCarX.Infrastructure.Services.Stripe
             foreach (var car in cars)
             {
                 if (!string.IsNullOrEmpty(car.StripeProductId) && !string.IsNullOrEmpty(car.StripePriceId))
-                    continue; // Już istnieje
+                    continue; 
 
                 // Create Stripe Product
                 var product = await _productService.CreateAsync(new ProductCreateOptions
@@ -40,8 +40,8 @@ namespace RentCarX.Infrastructure.Services.Stripe
                 // Create Stripe Price
                 var price = await _priceService.CreateAsync(new PriceCreateOptions
                 {
-                    UnitAmountDecimal = car.PricePerDay * 100, // grosze
-                    Currency = "pln",
+                    UnitAmountDecimal = car.PricePerDay * 100, 
+                    Currency = "usd",
                     Product = product.Id,
                 }, cancellationToken: cancellationToken);
 

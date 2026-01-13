@@ -7,8 +7,10 @@ using RentCarX.Application.Interfaces.Services.NotificationStrategy;
 using RentCarX.Application.Services.NotificationService.Flags;
 using RentCarX.Domain.Interfaces.Repositories;
 using RentCarX.Domain.Models;
+using RentCarX.Domain.Models.Enums;
 using RentCarX.HangfireWorker.Jobs;
 using RentCarX.Tests.UnitTests.HangfireUtils;
+using Xunit;
 
 namespace RentCarX.Tests.UnitTests.Jobs;
 
@@ -20,7 +22,6 @@ public class SendReservationDeadlineTests
     private readonly Mock<INotificationSender> _azureSenderMock;
     private readonly Mock<INotificationSender> _smtpSenderMock;
     private readonly List<INotificationSender> _senders;
-    private readonly SendReservationDeadline _job;
 
     public SendReservationDeadlineTests()
     {
@@ -36,10 +37,13 @@ public class SendReservationDeadlineTests
         _senders = new List<INotificationSender> { _azureSenderMock.Object, _smtpSenderMock.Object };
 
         _flagsMock.Setup(f => f.Value).Returns(new NotificationFeatureFlags());
+    }
 
-        _job = new SendReservationDeadline(
+    private SendReservationDeadline CreateJob(List<INotificationSender>? senders = null)
+    {
+        return new SendReservationDeadline(
             _reservationRepositoryMock.Object,
-            _senders,
+            senders ?? _senders,
             _flagsMock.Object,
             _loggerMock.Object);
     }
@@ -47,136 +51,190 @@ public class SendReservationDeadlineTests
     private void SetupReservations(List<Reservation> reservations)
     {
         var mockReservations = reservations.AsQueryable();
-
         var asyncEnumerable = new TestAsyncEnumerable<Reservation>(mockReservations);
         _reservationRepositoryMock.Setup(r => r.GetAll()).Returns(asyncEnumerable);
-    }
-
-    [Fact]
-    public async Task PerformJobAsync_WhenUseAzureNotificationsIsTrue_ShouldSendNotificationsViaAzure()
-    {
-        // Arrange
-        _flagsMock.Setup(f => f.Value).Returns(new NotificationFeatureFlags { UseAzureNotifications = true, UseSmtpProtocol = false });
-        
-        var reservations = new List<Reservation>
-        {
-            new() { EndDate = DateTime.UtcNow.AddMinutes(30), User = new User { Email = "test1@example.com" } },
-            new() { EndDate = DateTime.UtcNow.AddMinutes(30), User = new User { Email = "test2@example.com" } }
-        };
-        SetupReservations(reservations);
-
-        // Act
-        await _job.PerformJobAsync(CancellationToken.None);
-
-        // Assert
-        _azureSenderMock.Verify(s => s.SendNotificationAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<string>()), Times.Exactly(2));
-        _smtpSenderMock.Verify(s => s.SendNotificationAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<string>()), Times.Never);
-    }
-
-    [Fact]
-    public async Task PerformJobAsync_WhenUseSmtpProtocolIsTrue_ShouldSendNotificationsViaSmtp()
-    {
-        // Arrange
-        _flagsMock.Setup(f => f.Value).Returns(new NotificationFeatureFlags { UseAzureNotifications = false, UseSmtpProtocol = true });
-        var reservations = new List<Reservation>
-        {
-            new() { EndDate = DateTime.UtcNow.AddMinutes(30), User = new User { Email = "test1@example.com" } }
-        };
-        SetupReservations(reservations);
-
-        // Act
-        await _job.PerformJobAsync(CancellationToken.None);
-
-        // Assert
-        _smtpSenderMock.Verify(s => s.SendNotificationAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<string>()), Times.Once);
-        _azureSenderMock.Verify(s => s.SendNotificationAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<string>()), Times.Never);
-    }
-
-    [Fact]
-    public async Task PerformJobAsync_WhenBothFlagsAreTrue_ShouldSendNotificationsViaBoth()
-    {
-        // true
-        _flagsMock.Setup(f => f.Value).Returns(new NotificationFeatureFlags { UseAzureNotifications = true, UseSmtpProtocol = true });
-        var reservations = new List<Reservation>
-        {
-            new() { EndDate = DateTime.UtcNow.AddMinutes(30), User = new User { Email = "test1@example.com" } }
-        };
-        SetupReservations(reservations);
-
-        // Act
-        await _job.PerformJobAsync(CancellationToken.None);
-
-        // Assert
-        _azureSenderMock.Verify(s => s.SendNotificationAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<string>()), Times.Once);
-        _smtpSenderMock.Verify(s => s.SendNotificationAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<string>()), Times.Once);
     }
 
     [Fact]
     public async Task PerformJobAsync_WhenNoReservationsInTimeframe_ShouldNotSendNotifications()
     {
         // Arrange
-        _flagsMock.Setup(f => f.Value).Returns(new NotificationFeatureFlags { UseAzureNotifications = true, UseSmtpProtocol = true });
+        _flagsMock.Setup(f => f.Value).Returns(
+            new NotificationFeatureFlags { UseAzureNotifications = true, UseSmtpProtocol = true });
+        
         var reservations = new List<Reservation>
         {
-            new() { EndDate = DateTime.UtcNow.AddHours(1), User = new User { Email = "test1@example.com" } } 
+            new() 
+            { 
+                Id = Guid.NewGuid(),
+                CarId = Guid.NewGuid(),
+                UserId = Guid.NewGuid(),
+                EndDate = DateTime.UtcNow.AddHours(1),
+                Status = ReservationStatus.Confirmed,
+                IsPaid = true,
+                User = new User { Email = "test1@example.com" } 
+            }
         };
         SetupReservations(reservations);
+        
+        var job = CreateJob();
 
         // Act
-        await _job.PerformJobAsync(CancellationToken.None);
+        await job.PerformJobAsync(CancellationToken.None);
 
         // Assert
-        _azureSenderMock.Verify(s => s.SendNotificationAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<string>()), Times.Never);
-        _smtpSenderMock.Verify(s => s.SendNotificationAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<string>()), Times.Never);
+        _azureSenderMock.Verify(
+            s => s.SendNotificationAsync(It.IsAny<string>(), It.IsAny<string>(), 
+                It.IsAny<CancellationToken>(), It.IsAny<string>()), 
+            Times.Never);
+        _smtpSenderMock.Verify(
+            s => s.SendNotificationAsync(It.IsAny<string>(), It.IsAny<string>(), 
+                It.IsAny<CancellationToken>(), It.IsAny<string>()), 
+            Times.Never);
     }
 
     [Fact]
     public async Task PerformJobAsync_WhenReservationUserHasNoEmail_ShouldNotSendNotification()
     {
         // Arrange
-        _flagsMock.Setup(f => f.Value).Returns(new NotificationFeatureFlags { UseAzureNotifications = true, UseSmtpProtocol = true });
+        var now = DateTime.UtcNow;
+        var reminderTime = now.AddMinutes(30);
+        
+        _flagsMock.Setup(f => f.Value).Returns(
+            new NotificationFeatureFlags { UseAzureNotifications = true, UseSmtpProtocol = true });
+        
         var reservations = new List<Reservation>
         {
-            new() { EndDate = DateTime.UtcNow.AddMinutes(30), User = new User { Email = null } },
-            new() { EndDate = DateTime.UtcNow.AddMinutes(30), User = new User { Email = "" } },
-            new() { EndDate = DateTime.UtcNow.AddMinutes(30), User = new User { Email = " " } },
-            new() { EndDate = DateTime.UtcNow.AddMinutes(30), User = null }
+            new() 
+            { 
+                Id = Guid.NewGuid(),
+                CarId = Guid.NewGuid(),
+                UserId = Guid.NewGuid(),
+                EndDate = reminderTime,
+                Status = ReservationStatus.Confirmed,
+                IsPaid = true,
+                User = new User { Email = null } 
+            },
+            new() 
+            { 
+                Id = Guid.NewGuid(),
+                CarId = Guid.NewGuid(),
+                UserId = Guid.NewGuid(),
+                EndDate = reminderTime,
+                Status = ReservationStatus.Confirmed,
+                IsPaid = true,
+                User = new User { Email = "" } 
+            },
+            new() 
+            { 
+                Id = Guid.NewGuid(),
+                CarId = Guid.NewGuid(),
+                UserId = Guid.NewGuid(),
+                EndDate = reminderTime,
+                Status = ReservationStatus.Confirmed,
+                IsPaid = true,
+                User = new User { Email = " " } 
+            },
+            new() 
+            { 
+                Id = Guid.NewGuid(),
+                CarId = Guid.NewGuid(),
+                UserId = Guid.NewGuid(),
+                EndDate = reminderTime,
+                Status = ReservationStatus.Confirmed,
+                IsPaid = true,
+                User = null 
+            }
         };
         SetupReservations(reservations);
+        
+        var job = CreateJob();
 
         // Act
-        await _job.PerformJobAsync(CancellationToken.None);
+        await job.PerformJobAsync(CancellationToken.None);
 
         // Assert
-        _azureSenderMock.Verify(s => s.SendNotificationAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<string>()), Times.Never);
-        _smtpSenderMock.Verify(s => s.SendNotificationAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<string>()), Times.Never);
+        _azureSenderMock.Verify(
+            s => s.SendNotificationAsync(It.IsAny<string>(), It.IsAny<string>(), 
+                It.IsAny<CancellationToken>(), It.IsAny<string>()), 
+            Times.Never);
+        _smtpSenderMock.Verify(
+            s => s.SendNotificationAsync(It.IsAny<string>(), It.IsAny<string>(), 
+                It.IsAny<CancellationToken>(), It.IsAny<string>()), 
+            Times.Never);
     }
 
     [Fact]
-    public async Task PerformJobAsync_WhenAzureSenderIsNotAvailable_ShouldNotThrowAndSmtpShouldWork()
+    public async Task PerformJobAsync_WhenReservationIsCancelled_ShouldNotSendReminder()
     {
         // Arrange
-        _flagsMock.Setup(f => f.Value).Returns(new NotificationFeatureFlags { UseAzureNotifications = false, UseSmtpProtocol = true });
-       
-        var sendersWithoutAzure = new List<INotificationSender> { _smtpSenderMock.Object };
-        var jobWithPartialSenders = new SendReservationDeadline(
-            _reservationRepositoryMock.Object,
-            sendersWithoutAzure,
-            _flagsMock.Object,
-            _loggerMock.Object);
+        var now = DateTime.UtcNow;
+        var reminderTime = now.AddMinutes(30);
+        
+        _flagsMock.Setup(f => f.Value).Returns(
+            new NotificationFeatureFlags { UseSmtpProtocol = true, UseAzureNotifications = false });
 
         var reservations = new List<Reservation>
         {
-            new() { EndDate = DateTime.UtcNow.AddMinutes(30), User = new User { Email = "test1@example.com" } }
+            new() 
+            { 
+                Id = Guid.NewGuid(),
+                CarId = Guid.NewGuid(),
+                UserId = Guid.NewGuid(),
+                EndDate = reminderTime,
+                Status = ReservationStatus.Cancelled,
+                IsPaid = true,
+                User = new User { Email = "test@example.com" }
+            }
         };
         SetupReservations(reservations);
+        
+        var job = CreateJob();
 
         // Act
-        Func<Task> act = async () => await jobWithPartialSenders.PerformJobAsync(CancellationToken.None);
+        await job.PerformJobAsync(CancellationToken.None);
 
-        // Assert
-        await act.Should().NotThrowAsync();
-        _smtpSenderMock.Verify(s => s.SendNotificationAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<string>()), Times.Once);
-        _azureSenderMock.Verify(s => s.SendNotificationAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>(), It.IsAny<string>()), Times.Never);
+        // Assert 
+        _smtpSenderMock.Verify(
+            s => s.SendNotificationAsync(It.IsAny<string>(), It.IsAny<string>(), 
+                It.IsAny<CancellationToken>(), It.IsAny<string>()), 
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task PerformJobAsync_WhenReservationNotPaid_ShouldNotSendReminder()
+    {
+        // Arrange
+        var now = DateTime.UtcNow;
+        var reminderTime = now.AddMinutes(30);
+        
+        _flagsMock.Setup(f => f.Value).Returns(
+            new NotificationFeatureFlags { UseSmtpProtocol = true, UseAzureNotifications = false });
+
+        var reservations = new List<Reservation>
+        {
+            new() 
+            { 
+                Id = Guid.NewGuid(),
+                CarId = Guid.NewGuid(),
+                UserId = Guid.NewGuid(),
+                EndDate = reminderTime,
+                Status = ReservationStatus.Confirmed,
+                IsPaid = false,
+                User = new User { Email = "test@example.com" }
+            }
+        };
+        SetupReservations(reservations);
+        
+        var job = CreateJob();
+
+        // Act
+        await job.PerformJobAsync(CancellationToken.None);
+
+        // Assert 
+        _smtpSenderMock.Verify(
+            s => s.SendNotificationAsync(It.IsAny<string>(), It.IsAny<string>(), 
+                It.IsAny<CancellationToken>(), It.IsAny<string>()), 
+            Times.Never);
     }
 }

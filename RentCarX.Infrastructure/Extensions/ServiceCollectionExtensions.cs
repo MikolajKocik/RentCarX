@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using RentCarX.Application.Interfaces.JWT;
+using RentCarX.Application.Interfaces.Services.File;
 using RentCarX.Application.Services.User;
 using RentCarX.Domain.Interfaces.DbContext;
 using RentCarX.Domain.Interfaces.Repositories;
@@ -11,6 +12,7 @@ using RentCarX.Domain.Interfaces.Services.Stripe;
 using RentCarX.Domain.Interfaces.UserContext;
 using RentCarX.Infrastructure.Data;
 using RentCarX.Infrastructure.Repositories;
+using RentCarX.Infrastructure.Services.CarImage;
 using RentCarX.Infrastructure.Services.JWT;
 using RentCarX.Infrastructure.Services.Stripe;
 using RentCarX.Infrastructure.Settings;
@@ -81,5 +83,7 @@ public static class ServiceCollectionExtensions
 
         // webhook handler
         services.AddScoped<IStripeWebhookHandler, StripeWebhookHandlerImplementation>();
+
+        services.AddScoped<IFileUploadService, FileUploadService>();
     }
 }

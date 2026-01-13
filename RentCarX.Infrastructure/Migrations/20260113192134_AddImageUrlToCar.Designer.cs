@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RentCarX.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using RentCarX.Infrastructure.Data;
 namespace RentCarX.Infrastructure.Migrations
 {
     [DbContext(typeof(RentCarX_DbContext))]
-    partial class RentCarX_DbContextModelSnapshot : ModelSnapshot
+    [Migration("20260113192134_AddImageUrlToCar")]
+    partial class AddImageUrlToCar
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -253,9 +256,6 @@ namespace RentCarX.Infrastructure.Migrations
 
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
 
                     b.Property<decimal>("TotalCost")
                         .HasPrecision(18, 2)
@@ -510,16 +510,16 @@ namespace RentCarX.Infrastructure.Migrations
                         {
                             Id = new Guid("99000000-0000-0000-0000-00000000dddd"),
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "a1a353b2-9340-47d8-9ea6-642635c65afb",
+                            ConcurrencyStamp = "01b3ca11-eeb1-4ddd-a202-80085ee8464f",
                             Email = "admin@rentcarx.com",
                             EmailConfirmed = true,
                             IsDeleted = false,
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN@RENTCARX.COM",
                             NormalizedUserName = "ADMIN@RENTCARX.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAENw2w5lop4WyfmWR2IJQfnT1wbf34FfNg5i0unsIhFHy9/G2GVu4a3pGygbnByr1EA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEOHMVoVyftLNhFMhdX/4ncusm89DpjQXYBRjlkKRzEaMXlqIWb+pJArzNiIkEEdUzA==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "17e93d88-e03a-46b7-a4e1-bbe7663ad8cb",
+                            SecurityStamp = "7cdbd1f6-6c5b-42e5-b937-18a4e36b2c10",
                             TwoFactorEnabled = false,
                             UserName = "admin@rentcarx.com"
                         });
