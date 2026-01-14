@@ -1,36 +1,62 @@
 ﻿using AutoMapper;
 using MediatR;
+using Microsoft.Extensions.Logging;
+using RentCarX.Application.Interfaces.Services.File;
 using RentCarX.Domain.Exceptions;
 using RentCarX.Domain.Interfaces.Repositories;
 
+namespace RentCarX.Application.CQRS.Commands.Car.EditCar;
 
-namespace RentCarX.Application.CQRS.Commands.Car.EditCar
+public class EditCarCommandHandler : IRequestHandler<EditCarCommand, Unit>
 {
-    public class EditCarCommandHandler : IRequestHandler<EditCarCommand, Unit>
+    private readonly ICarRepository _carRepository;
+    private readonly IMapper _mapper;
+    private readonly IFileUploadService _fileUploadService;
+    private readonly ILogger<EditCarCommandHandler> _logger;
+
+    public EditCarCommandHandler(
+        ICarRepository carRepository,
+        IMapper mapper,
+        IFileUploadService fileUploadService,
+        ILogger<EditCarCommandHandler> logger)
     {
-        private readonly ICarRepository _carRepository;
-        private readonly IMapper _mapper;
+        _carRepository = carRepository;
+        _mapper = mapper;
+        _fileUploadService = fileUploadService;
+        _logger = logger;
+    }
 
-        public EditCarCommandHandler(ICarRepository carRepository, IMapper mapper)
+    public async Task<Unit> Handle(EditCarCommand request, CancellationToken cancellationToken)
+    {
+        var car = await _carRepository.GetCarByIdAsync(request.Id, cancellationToken);
+
+        if (car == null)
         {
-            _carRepository = carRepository;
-            _mapper = mapper;
+            throw new NotFoundException("Car", request.Id.ToString());
         }
 
-        public async Task<Unit> Handle(EditCarCommand request, CancellationToken cancellationToken)
-        {
-            var car = await _carRepository.GetCarByIdAsync(request.Id, cancellationToken);
+        _mapper.Map(request.CarData, car);
 
-            if (car == null)
+        if (request.CarData.Image != null)
+        {
+            try
             {
-                throw new NotFoundException("Car", request.Id.ToString()); 
+                if (!string.IsNullOrEmpty(car.ImageUrl))
+                {
+                    await _fileUploadService.DeleteImageAsync(car.ImageUrl, cancellationToken);
+                }
+
+                car.ImageUrl = await _fileUploadService.UploadImageAsync(request.CarData.Image, cancellationToken);
             }
-
-            _mapper.Map(request.CarData, car);
-
-            await _carRepository.UpdateCarAsync(car, cancellationToken);
-
-            return Unit.Value;
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to upload image for car {CarId}", request.Id);
+                throw;
+            }
         }
+
+        await _carRepository.UpdateCarAsync(car, cancellationToken);
+
+        return Unit.Value;
     }
 }

@@ -15,5 +15,6 @@ namespace RentCarX.Application.DTOs.Car
         public string FuelType { get; set; } = default!;
         public decimal PricePerDay { get; set; }
         public bool IsAvailable { get; set; }
+        public string? ImageUrl { get; set; }
     }
 }

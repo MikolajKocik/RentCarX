@@ -6,6 +6,7 @@ using RentCarX.Application.Interfaces.Services.NotificationStrategy;
 using RentCarX.Application.Services.NotificationService.Flags;
 using RentCarX.Domain.Interfaces.Repositories;
 using RentCarX.Domain.Models;
+using RentCarX.Domain.Models.Enums;
 using RentCarX.HangfireWorker.Jobs.Abstractions;
 
 namespace RentCarX.HangfireWorker.Jobs;
@@ -30,15 +31,15 @@ public sealed class SendReservationDeadline : JobPlanner
     public override async Task PerformJobAsync(CancellationToken cancellationToken)
     {
         DateTime now = DateTime.UtcNow;
-        DateTime targetTime = now.AddMinutes(30);
+        DateTime reminder = now.AddMinutes(30);
 
         if (_flags.Value.UseAzureNotifications)
         {
             INotificationSender? azure = _senders.FirstOrDefault(r => r.StrategyName == NotificationStrategyOptions.Azure);
             if (azure is not null)
             {
-                await SetNotificationAsync(targetTime, azure, cancellationToken);
-            }        
+                await SetNotificationAsync(reminder, azure, cancellationToken);
+            }
         }
 
         if (_flags.Value.UseSmtpProtocol)
@@ -46,38 +47,76 @@ public sealed class SendReservationDeadline : JobPlanner
             INotificationSender? smtp = _senders.FirstOrDefault(s => s.StrategyName == NotificationStrategyOptions.Smtp);
             if (smtp is not null)
             {
-                await SetNotificationAsync(targetTime, smtp, cancellationToken);
-            }        
+                await SetNotificationAsync(reminder, smtp, cancellationToken);
+            }
         }
     }
 
-    private async Task SetNotificationAsync(DateTime targetTime, INotificationSender notification, CancellationToken cancellationToken)
+    private async Task SetNotificationAsync(DateTime reminder, INotificationSender notification, CancellationToken cancellationToken)
     {
-        DateTime from = targetTime.AddMinutes(-1);
-        DateTime to = targetTime.AddMinutes(1);
+        DateTime from = reminder.AddMinutes(-1);
+        DateTime to = reminder.AddMinutes(1);
 
         List<Reservation> reservations = await _reservationRepository.GetAll()
-         .Include(r => r.User)
-         .Where(r => r.EndDate >= from && r.EndDate <= to)
-         .ToListAsync(cancellationToken);
+            .Include(r => r.User)
+            .Where(r => r.EndDate >= from &&
+                        r.EndDate <= to &&
+                        r.Status != ReservationStatus.Cancelled &&
+                        r.IsPaid &&
+                        !r.IsDeleted)
+            .ToListAsync(cancellationToken);
+
+        if (!reservations.Any())
+        {
+            _logger.LogInformation("No reservations requiring pickup reminders at {Time}", reminder);
+            return;
+        }
 
         foreach (var reservation in reservations)
         {
-            if (string.IsNullOrWhiteSpace(reservation.User?.Email)) continue;
+            try
+            {
 
-            string subject = "Reservation reminder";
+                if (string.IsNullOrWhiteSpace(reservation.User?.Email))
+                {
+                    _logger.LogWarning("Reservation {ReservationId} has no valid email for user {UserId}",
+                        reservation.Id, reservation.UserId);
+                    continue;
+                }
 
-            string messageBody = @$"
+                if (string.IsNullOrWhiteSpace(reservation.User?.Email)) continue;
+
+                if (reservation.Status == ReservationStatus.Cancelled)
+                    continue;
+
+                if (!reservation.IsPaid)
+                    continue;
+
+                string carName = $"{reservation.Car.Brand} {reservation.Car.Model}";
+                string subject = "Reservation reminder";
+
+                string messageBody = $@"
                     <html>
                         <body>
-                            <p> Your reservation ends in 30 minutes.</p>
-                            <p> Please remember to return your car on time.</p>
-                            <p> This message is auto generated.</p>
+                            <h2>Reservation Reminder</h2>
+                            <p>Hello,</p>
+                            <p>Your reservation for <strong>{carName}</strong> ends in approximately 30 minutes.</p>
+                            <p><strong>Return deadline:</strong> {reservation.EndDate:yyyy-MM-dd HH:mm} UTC</p>
+                            <p>Please ensure you return the car on time to avoid additional charges.</p>
+                            <br/>
+                            <p>Thank you for using RentCarX!</p>
                         </body>
                     </html>";
 
-
-            await notification.SendNotificationAsync(subject, messageBody, cancellationToken, reservation.User.Email);
+                await notification.SendNotificationAsync(subject, messageBody, cancellationToken, reservation.User.Email);
+                _logger.LogInformation("Reminder sent for reservation {ReservationId} to {Email}",
+                       reservation.Id, reservation.User.Email);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error sending pickup reminder for reservation {ReservationId}",
+                    reservation.Id);
+            }
         }
     }
 }

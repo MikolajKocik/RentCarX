@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using Microsoft.AspNetCore.Http;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace RentCarX.Domain.Models
 {
@@ -12,6 +13,7 @@ namespace RentCarX.Domain.Models
         public int Year { get; set; }
         public string FuelType { get; set; } = default!;
         public decimal PricePerDay { get; set; }
+        public string? ImageUrl { get; set; }
 
         // 1 = true | 0 = false
         [System.Text.Json.Serialization.JsonIgnore]

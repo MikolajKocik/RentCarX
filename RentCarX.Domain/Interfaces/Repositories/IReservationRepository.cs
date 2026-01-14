@@ -1,5 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore.Storage;
-using RentCarX.Domain.Models; 
+using RentCarX.Domain.Models;
+using RentCarX.Domain.Models.Enums;
+using System.Linq.Expressions;
 
 namespace RentCarX.Domain.Interfaces.Repositories
 {
@@ -16,5 +18,9 @@ namespace RentCarX.Domain.Interfaces.Repositories
         Task SaveToDatabase(CancellationToken cancellationToken);
         Task<IEnumerable<Reservation>> GetUserReservationsAsync(Guid userId, CancellationToken cancellationToken);
         Task<List<Guid>> GetCarIdsWithActiveReservationAsync(DateTime currentTime, CancellationToken cancellationToken);
+        Task UpdateReservationStatusAsync(
+            Expression<Func<Reservation, bool>> predicate,
+            ReservationStatus newStatus,
+            CancellationToken cancellationToken);
     }
 }

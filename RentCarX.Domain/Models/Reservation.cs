@@ -1,4 +1,6 @@
-﻿namespace RentCarX.Domain.Models
+﻿using RentCarX.Domain.Models.Enums;
+
+namespace RentCarX.Domain.Models
 {
     public sealed class Reservation
     {
@@ -12,6 +14,8 @@
         public decimal TotalCost { get; set; }
         public bool IsPaid { get; set; }
         public bool IsDeleted { get; set; }
+
+        public ReservationStatus Status { get; set; } = ReservationStatus.Pending;
 
         public Car Car { get; set; } = default!;
 

@@ -1,4 +1,5 @@
 ﻿using RentCarX.Application.DTOs.Reservation;
+using RentCarX.Domain.Models.Enums;
 
 namespace RentCarX.Application.DTOs.Car;
 
