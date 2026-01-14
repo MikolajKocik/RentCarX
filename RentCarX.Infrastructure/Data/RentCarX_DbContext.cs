@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Options;
 using RentCarX.Domain.Interfaces.DbContext;
 using RentCarX.Domain.Models;
@@ -92,6 +93,11 @@ public sealed class RentCarX_DbContext : IdentityDbContext<User, IdentityRole<Gu
             }
         );
         #endregion
+    }
+
+    public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
+    {
+        return this.Database.BeginTransactionAsync(cancellationToken);
     }
 }
 

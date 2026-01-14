@@ -55,14 +55,14 @@ public sealed class CancelReservationCommandHandler : IRequestHandler<CancelRese
         if (reservation.StartDate <= DateTime.UtcNow)
             throw new BadRequestException("Cannot cancel a reservation that has already started or is in the past.");
 
-        Payment? payment = await _paymentRepository.GetByReservationId(reservation.Id, cancellationToken);
-
-        using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+        using var transaction = await _context.BeginTransactionAsync(cancellationToken);
         try
         {
+            Payment? payment = await _paymentRepository.GetByReservationId(reservation.Id, cancellationToken);
+
             if (payment != null && !string.IsNullOrEmpty(payment.StripePaymentIntentId))
             {
-                await _paymentService.CreateRefundAsync(payment.StripePaymentIntentId);
+                await _paymentService.CreateRefundAsync(payment.StripePaymentIntentId, cancellationToken);
 
                 payment.Status = PaymentStatus.Refunded;
                 payment.RefundedAt = DateTime.UtcNow;
@@ -81,13 +81,13 @@ public sealed class CancelReservationCommandHandler : IRequestHandler<CancelRese
             reservation.IsPaid = false;
 
             await _reservationRepository.SaveToDatabase(cancellationToken);
-            await transaction.CommitAsync();
+            await transaction.CommitAsync(cancellationToken);
 
             _logger.LogInformation("Reservation {Id} was successfully cancelled.", request.Id);
         }
         catch (Exception ex)
         {
-            await transaction.RollbackAsync();
+            await transaction.RollbackAsync(cancellationToken);
             _logger.LogError(ex, "Error occurred while cancelling the reservation {Id}", request.Id);
             throw;
         }

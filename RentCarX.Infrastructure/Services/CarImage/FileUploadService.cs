@@ -21,6 +21,12 @@ public sealed class FileUploadService : IFileUploadService
         _logger = logger;
     }
 
+    private string GetRootPath()
+    {
+        return _webHostEnvironment.WebRootPath
+               ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+    }
+
     /// <summary>
     /// Asynchronously uploads an image file and returns the relative URL of the stored image.
     /// </summary>
@@ -53,7 +59,8 @@ public sealed class FileUploadService : IFileUploadService
 
         try
         {
-            string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, ImagesFolder);
+            string rootPath = GetRootPath();
+            string uploadsFolder = Path.Combine(rootPath, ImagesFolder);
             Directory.CreateDirectory(uploadsFolder);
 
             string fileName = $"{Guid.NewGuid()}{extension}";
@@ -92,7 +99,9 @@ public sealed class FileUploadService : IFileUploadService
         try
         {
             string fileName = Path.GetFileName(imagePath);
-            string filePath = Path.Combine(_webHostEnvironment.WebRootPath, ImagesFolder, fileName);
+
+            string rootPath = GetRootPath();
+            string filePath = Path.Combine(rootPath, ImagesFolder, fileName);
 
             if (File.Exists(filePath))
             {

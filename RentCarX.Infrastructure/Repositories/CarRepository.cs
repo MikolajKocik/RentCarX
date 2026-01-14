@@ -36,6 +36,7 @@ public sealed class CarRepository : ICarRepository
 
     public async Task<Car?> GetCarByIdAsync(Guid id, CancellationToken cancellation) 
         => await _context.Cars 
+        .Include(c => c.Reservations)
         .FirstOrDefaultAsync(c => c.Id == id, cancellation);
 
     public async Task<ICollection<Car>> GetAllAsync(CancellationToken cancellation) 

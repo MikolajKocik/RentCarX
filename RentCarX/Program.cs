@@ -1,5 +1,6 @@
 using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;
+using DocumentFormat.OpenXml.Presentation;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.EntityFrameworkCore;
@@ -18,9 +19,13 @@ using RentCarX.Presentation.Middleware;
 using RentCarX.Presentation.Observability.Prometheus;
 using Serilog;
 using System.Diagnostics;
-using System.Text.Json.Serialization;
+using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var cultureInfo = CultureInfo.InvariantCulture;
+CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
+CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
 
 var allowedOrigins = new[]
 {
@@ -138,6 +143,8 @@ app.UseHttpsRedirection();
 app.UseRouting();
 
 app.UseCors("RentcarxCors");
+
+app.UseStaticFiles();
 
 app.UseAuthentication();
 

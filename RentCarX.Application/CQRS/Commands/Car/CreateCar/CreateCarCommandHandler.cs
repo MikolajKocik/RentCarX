@@ -11,21 +11,18 @@ namespace RentCarX.Application.CQRS.Commands.Car.CreateCar;
 public class CreateCarCommandHandler : IRequestHandler<CreateCarCommand, Guid>
 {
     private readonly ICarRepository _carRepository;
-    private readonly IMapper _mapper;
     private readonly ProductService _productService;
     private readonly IFileUploadService _fileUploadService;
     private readonly ILogger<CreateCarCommandHandler> _logger;
 
     public CreateCarCommandHandler(
         ICarRepository carRepository,
-        IMapper mapper,
         ProductService productService,
          IFileUploadService fileUploadService,
         ILogger<CreateCarCommandHandler> logger
         )
     {
         _carRepository = carRepository;
-        _mapper = mapper;
         _productService = productService;
         _fileUploadService = fileUploadService;
         _logger = logger;
@@ -35,11 +32,11 @@ public class CreateCarCommandHandler : IRequestHandler<CreateCarCommand, Guid>
     {
         var productOptions = new ProductCreateOptions
         {
-            Name = $"{request.CarData.Brand} {request.CarData.Model} ({request.CarData.Year})",
-            Description = $"Rental for {request.CarData.Brand} {request.CarData.Model}",
+            Name = $"{request.Brand} {request.Model} ({request.Year})",
+            Description = $"Rental for {request.Brand} {request.Model}",
             DefaultPriceData = new ProductDefaultPriceDataOptions
             {
-                UnitAmountDecimal = request.CarData.PricePerDay * 100,
+                UnitAmountDecimal = request.PricePerDay * 100,
                 Currency = "usd",
             },
         };
@@ -47,18 +44,24 @@ public class CreateCarCommandHandler : IRequestHandler<CreateCarCommand, Guid>
         // stripe product
         Product product = await _productService.CreateAsync(productOptions, cancellationToken: cancellationToken);
 
-        var car = _mapper.Map<RentCarX.Domain.Models.Car>(request.CarData);
-        car.Id = Guid.NewGuid();
+        var car = new RentCarX.Domain.Models.Car
+        {
+            Id = Guid.NewGuid(),
+            Brand = request.Brand,
+            Model = request.Model,
+            Year = request.Year,
+            FuelType = request.FuelType,
+            PricePerDay = request.PricePerDay,
+            IsAvailable = request.IsAvailable,
+            StripeProductId = product.Id,
+            StripePriceId = product.DefaultPriceId
+        };       
 
-        // Assign the new Stripe IDs to the car object
-        car.StripeProductId = product.Id;
-        car.StripePriceId = product.DefaultPriceId;
-
-        if (request.CarData.Image != null)
+        if (request.Image != null)
         {
             try
             {
-                car.ImageUrl = await _fileUploadService.UploadImageAsync(request.CarData.Image, cancellationToken);
+                car.ImageUrl = await _fileUploadService.UploadImageAsync(request.Image, cancellationToken);
             }
             catch (Exception ex)
             {

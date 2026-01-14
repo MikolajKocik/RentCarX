@@ -59,7 +59,7 @@ public class CreateReservationCommandHandler : IRequestHandler<CreateReservation
             throw new NotFoundException("Car not found", request.CarId.ToString());
         }
 
-        using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+        using var transaction = await _context.BeginTransactionAsync(cancellationToken);
 
         try
         {
