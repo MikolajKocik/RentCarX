@@ -1,11 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Infrastructure;
-using RentCarX.Domain.Models;
+﻿using Microsoft.EntityFrameworkCore.Storage;
 
-namespace RentCarX.Domain.Interfaces.DbContext
+namespace RentCarX.Domain.Interfaces.DbContext;
+
+public interface IRentCarX_DbContext
 {
-    public interface IRentCarX_DbContext
-    {
-        DatabaseFacade Database { get; }
-    }
+    Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default);
 }

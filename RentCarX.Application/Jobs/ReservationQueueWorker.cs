@@ -1,10 +1,5 @@
 ﻿using Microsoft.Extensions.Hosting;
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RentCarX.Application.Jobs;
 
@@ -14,7 +9,7 @@ namespace RentCarX.Application.Jobs;
 /// <remarks>This service continuously monitors a queue of car reservation IDs and processes them asynchronously.
 /// It uses a semaphore to signal when new items are added to the queue. If an error occurs during the processing of a
 /// reservation, the item is re-enqueued for retry.</remarks>
-public sealed class ReservationQueueWorker : BackgroundService
+public class ReservationQueueWorker : BackgroundService
 {
     private readonly ConcurrentQueue<Guid> _reservationQueue;
     private readonly SemaphoreSlim _signal = new(0);
