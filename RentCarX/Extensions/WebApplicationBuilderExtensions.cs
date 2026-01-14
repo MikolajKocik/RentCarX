@@ -69,7 +69,11 @@ public static class WebApplicationBuilderExtensions
         // JWT authentication configuration
         JsonWebTokenExtend.SetToken(builder);
 
-        builder.Services.AddControllers();
+        builder.Services.AddControllers()
+            .AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+            }); 
 
         // Feature flags management
         builder.Services.AddFeatureManagement();
