@@ -1,0 +1,12 @@
+RentCarX Backend REST API
+Copyright 2026 Mikołaj Kocik
+
+This repository contains the RentCarX backend REST API, including its source
+code, architecture, infrastructure, and DevOps configuration.
+
+The backend is licensed under the Apache License, Version 2.0.
+See the LICENSE file for the complete license text.
+
+The frontend contribution by Dawid Majchrzak is credited in the README for
+historical and project-context purposes. This NOTICE file applies only to the
+backend contents of this repository.
